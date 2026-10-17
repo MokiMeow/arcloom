@@ -1,0 +1,85 @@
+services:
+  app:
+    build: .
+    image: arcloom:local
+    restart: unless-stopped
+    ports:
+      - "127.0.0.1:8000:8000"
+    environment:
+      ARCLOOM_ADMIN_TOKEN: ${ARCLOOM_ADMIN_TOKEN:?Run python scripts/configure.py first}
+      ARCLOOM_RUNNER_SECRET: ${ARCLOOM_RUNNER_SECRET:?Generate credentials first}
+      ARCLOOM_GRAPH_PASSWORD: ${ARCLOOM_GRAPH_PASSWORD:?Generate credentials first}
+      ARCLOOM_GRAPH_MODE: server
+      ARCLOOM_GRAPH_HOST: graph
+      ARCLOOM_DATA_DIR: /app/data
+      ARCLOOM_LAB_URL: http://lab:9001
+      ARCLOOM_PROVIDER: ${ARCLOOM_PROVIDER:-deterministic}
+      ARCLOOM_MODEL: ${ARCLOOM_MODEL:-}
+      ARCLOOM_MODEL_API_KEY: ${ARCLOOM_MODEL_API_KEY:-}
+      ARCLOOM_COOKIE_SECURE: ${ARCLOOM_COOKIE_SECURE:-false}
+      ARCLOOM_TENANT: ${ARCLOOM_TENANT:-lab-01}
+      ARCLOOM_EXECUTION_BUDGET: ${ARCLOOM_EXECUTION_BUDGET:-20}
+      ARCLOOM_MODEL_CALL_BUDGET: ${ARCLOOM_MODEL_CALL_BUDGET:-20}
+      ARCLOOM_MAX_DEPTH: ${ARCLOOM_MAX_DEPTH:-3}
+    volumes:
+      - journal:/app/data
+    networks: [control, outside]
+    depends_on:
+      graph: {condition: service_healthy}
+      lab: {condition: service_healthy}
+    read_only: true
+    tmpfs: ["/tmp:rw,nosuid,noexec,size=64m"]
+    cap_drop: [ALL]
+    security_opt: ["no-new-privileges:true"]
+    pids_limit: 128
+    mem_limit: 768m
+    cpus: 1.0
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8000/health/ready',timeout=5)"]
+      interval: 10s
+      timeout: 6s
+      retries: 10
+      start_period: 20s
+  lab:
+    build: .
+    image: arcloom:local
+    command: ["arcloom", "lab", "--host", "0.0.0.0", "--port", "9001"]
+    environment:
+      ARCLOOM_RUNNER_SECRET: ${ARCLOOM_RUNNER_SECRET:?Generate credentials first}
+    networks: [control]
+    read_only: true
+    tmpfs: ["/tmp:rw,nosuid,noexec,size=32m"]
+    cap_drop: [ALL]
+    security_opt: ["no-new-privileges:true"]
+    pids_limit: 64
+    mem_limit: 256m
+    cpus: 0.5
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://127.0.0.1:9001/health',timeout=3)"]
+      interval: 10s
+      timeout: 4s
+      retries: 8
+  graph:
+    image: falkordb/falkordb:v6.0.2
+    environment:
+      REDIS_ARGS: "--requirepass ${ARCLOOM_GRAPH_PASSWORD:?Generate credentials first} --appendonly yes --appendfsync everysec"
+      REDISCLI_AUTH: ${ARCLOOM_GRAPH_PASSWORD:?Generate credentials first}
+      BROWSER: "0"
+    volumes:
+      - graph:/var/lib/falkordb/data
+    networks: [control]
+    security_opt: ["no-new-privileges:true"]
+    mem_limit: 1g
+    cpus: 1.0
+    healthcheck:
+      test: ["CMD-SHELL", "redis-cli ping | grep -q PONG"]
+      interval: 10s
+      timeout: 4s
+      retries: 10
+networks:
+  control:
+    internal: true
+  outside: {}
+volumes:
+  journal: {}
+  graph: {}
