@@ -1,0 +1,48 @@
+name: Import recovered source
+on:
+  push:
+    paths: ['.github/workflows/import-recovered-source.yml']
+permissions:
+  contents: write
+jobs:
+  import:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          fetch-depth: 1
+      - name: Recover verified project files
+        env:
+          ARCHIVE_URL: https://sb-6jqbybt591yn.vercel.run/5ys_rwSA8KOot2hjm6Q5HiIMNls6yep_0lGUxrAwgw13QyfIK-KyOA/source.zip
+        run: |
+          python3 - <<'PY'
+          import hashlib, io, os, pathlib, urllib.request, zipfile
+          data = urllib.request.urlopen(os.environ['ARCHIVE_URL'], timeout=30).read(2_000_000)
+          assert hashlib.sha256(data).hexdigest() == '9025cff159527326199ddad510f5701ebaa8470a1dc486566812a990b4f03a7a', 'Archive integrity mismatch'
+          root = pathlib.Path.cwd().resolve()
+          count = 0
+          with zipfile.ZipFile(io.BytesIO(data)) as archive:
+              for item in archive.infolist():
+                  parts = pathlib.PurePosixPath(item.filename).parts
+                  assert parts[0] == 'arcloom' and '..' not in parts
+                  relative = pathlib.Path(*parts[1:])
+                  if relative.parts[:2] == ('.github', 'workflows') or relative.suffix == '.tsbuildinfo':
+                      continue
+                  assert '.git' not in parts and relative.name != '.env'
+                  target = root / relative
+                  assert target.resolve().is_relative_to(root)
+                  target.parent.mkdir(parents=True, exist_ok=True)
+                  target.write_bytes(archive.read(item))
+                  count += 1
+          print(f'Recovered {count} project files with verified archive integrity.')
+          PY
+      - name: Publish recovered source to main
+        run: |
+          git config user.name 'Arcloom source recovery'
+          git config user.email '122464960+MokiMeow@users.noreply.github.com'
+          git add --all -- . ':!.github/workflows'
+          if ! git diff --cached --quiet; then
+            git commit -m 'feat: publish complete recovered Arcloom application and tests'
+            git push origin HEAD:main
+          fi
