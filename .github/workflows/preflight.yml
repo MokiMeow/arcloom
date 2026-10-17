@@ -1,0 +1,17 @@
+name: Repository runner preflight
+on:
+  push:
+    paths: ['.github/workflows/preflight.yml']
+permissions:
+  contents: read
+jobs:
+  runner:
+    runs-on: ubuntu-latest
+    timeout-minutes: 2
+    steps:
+      - name: Verify private repository runner availability
+        run: |
+          python3 --version
+          node --version
+          git --version
+          echo 'Arcloom private-repository runner is ready.'
