@@ -1,0 +1,14 @@
+:root {
+  --canvas: #f8f9f6;
+  --white: #fff;
+  --ink: #253126;
+  --muted: #64715c;
+  --green: #517547;
+  --red: #a64f38;
+  --line: #e2e7dc;
+  --line-strong: #d2dcc9;
+  --font:
+    "Poppins", "Inter", ui-sans-serif, system-ui, -apple-system,
+    BlinkMacSystemFont, "Segoe UI", sans-serif;
+  --mono: "SFMono-Regular", Consolas, "Liberation Mono", monospace;
+}
