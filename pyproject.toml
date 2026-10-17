@@ -1,0 +1,55 @@
+[build-system]
+requires = ["hatchling>=1.27,<2"]
+build-backend = "hatchling.build"
+
+[project]
+name = "arcloom"
+version = "0.1.0"
+description = "Evidence-backed security memory, graph-guided investigation, and an authorized synthetic lab."
+readme = "README.md"
+requires-python = ">=3.12"
+license = {text = "All rights reserved"}
+authors = [{name = "Arcloom contributors"}]
+dependencies = [
+  "fastapi==0.143.3",
+  "uvicorn==0.54.0",
+  "pydantic==2.14.1",
+  "pydantic-settings==2.16.0",
+  "httpx==0.28.1",
+  "FalkorDB==1.8.0",
+]
+
+[project.optional-dependencies]
+lite = ["falkordblite==0.10.0"]
+dev = [
+  "pytest==9.1.1",
+  "pytest-cov==7.1.0",
+  "ruff==0.17.1",
+  "hypothesis==6.170.1",
+]
+
+[project.scripts]
+arcloom = "arcloom.cli:main"
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+pythonpath = ["src"]
+addopts = "-ra --strict-markers"
+markers = ["integration: requires an actual FalkorDB instance", "slow: process or browser integration"]
+
+[tool.ruff]
+target-version = "py312"
+line-length = 100
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "UP", "B", "SIM"]
+ignore = ["E501"]
+
+[tool.coverage.run]
+source = ["arcloom"]
+branch = true
+omit = ["*/cli.py"]
+
+[tool.coverage.report]
+show_missing = true
+skip_empty = true
