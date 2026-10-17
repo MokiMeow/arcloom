@@ -114,9 +114,7 @@ async def execute_fixture(plan: RunPlan, secret: str) -> dict:
             return response.status_code, body
 
         if plan.test_id == "audit-boundary":
-            await request(
-                "/audit", "An available dependency is required to evaluate authorization"
-            )
+            await request("/audit", "An available dependency is required to evaluate authorization")
             outcome, conclusion = (
                 Outcome.INCONCLUSIVE,
                 "Dependency returned 503; no authorization conclusion is supported.",

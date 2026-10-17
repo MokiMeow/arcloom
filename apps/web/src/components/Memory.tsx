@@ -7,6 +7,8 @@ import { useRemote } from "../api";
 import type { CasePage, GraphData, GraphNode } from "../types";
 import { Empty, ErrorNotice, Loading, SectionHead } from "./ui";
 
+import { GraphInsights } from "./GraphInsights";
+
 const order = [
   "Report",
   "Finding",
@@ -225,6 +227,11 @@ export function Memory({
               </div>
             </aside>
           </div>
+          <GraphInsights
+            key={revision}
+            nodes={graph.data.nodes}
+            selectNode={setSelected}
+          />
           <details className="panel query-panel">
             <summary>Inspect the actual candidate-selection Cypher</summary>
             <p className="muted">

@@ -8,11 +8,13 @@ from dataclasses import asdict
 from arcloom.agents import DeterministicPlanner, ModelPlanner
 from arcloom.auth import Auth
 from arcloom.catalog import ASSETS, REVISIONS, TESTS
+from arcloom.clef import ClefPlanner
 from arcloom.config import Settings
 from arcloom.discovery import Discovery
 from arcloom.domain import Actor, DomainError
 from arcloom.evidence import EvidenceStore
 from arcloom.graph import FalkorGraph, GraphPort, Projector, seed_graph
+from arcloom.intelligence import GraphIntelligence
 from arcloom.runner import HttpRunner, RunnerPort
 from arcloom.storage import Store
 from arcloom.worker import Worker
@@ -33,12 +35,17 @@ class Runtime:
         self.evidence = EvidenceStore(settings.data_dir / "evidence")
         self.graph = graph if graph is not None else FalkorGraph(settings)
         self.projector = Projector(self.store, self.graph)
+        self.intelligence = (
+            GraphIntelligence(self.graph) if isinstance(self.graph, FalkorGraph) else None
+        )
         self.runner = runner if runner is not None else HttpRunner(settings)
         self.cases = Cases(self.store, settings, self.projector, self.evidence)
         factory = planner_factory or (
             lambda: (
                 DeterministicPlanner()
                 if settings.provider == "deterministic"
+                else ClefPlanner(settings)
+                if settings.provider == "cloudflare"
                 else ModelPlanner(settings)
             )
         )
@@ -65,6 +72,8 @@ class Runtime:
         # An unavailable graph stays unavailable; no SQLite reasoning fallback.
         with suppress(DomainError):
             self.projector.flush()
+            if self.intelligence is not None:
+                self.intelligence.prepare(self.settings.tenant)
 
     def dashboard(self, actor: Actor) -> dict:
         tenant = self.store.one("SELECT * FROM tenants WHERE id=?", (actor.tenant,))
@@ -120,7 +129,9 @@ class Runtime:
             "model": {
                 "provider": self.settings.provider,
                 "model": self.settings.model or "graph-rank-v1",
-                "live_llm": self.settings.provider != "deterministic",
+                "live_llm": self.settings.provider in {"openai", "anthropic"},
+                "remote_model": self.settings.provider != "deterministic",
+                "decision_model": self.settings.provider == "cloudflare",
                 **agent_usage,
             },
             "worker": {

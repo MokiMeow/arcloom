@@ -136,6 +136,17 @@ class Discovery:
                 self._finish(actor, key, agent_id, result, 0, 0)
                 return result
             plan = self.planner_factory().select(candidates[:10])
+            if plan.selection is None:
+                result = {
+                    **pending,
+                    "status": "needs_review",
+                    "case_id": None,
+                    "reason": plan.reason or "The model abstained; human review is required.",
+                    "candidates": [c.public() for c in candidates],
+                    "decision": plan.decision,
+                }
+                self._finish(actor, key, agent_id, result, plan.input_tokens, plan.output_tokens)
+                return result
             selected = check_selection(plan.selection, candidates[:10])
             with self.store.transaction() as conn:
                 scope_check(
@@ -230,6 +241,7 @@ class Discovery:
                     "duplicate": duplicate,
                     "reason": plan.selection.reason,
                     "selection": selected.public(),
+                    "decision": plan.decision,
                     "candidates": [c.public() for c in candidates],
                 }
                 self._finish_tx(
@@ -342,5 +354,21 @@ class Discovery:
                 "input_tokens": input_tokens,
                 "output_tokens": output_tokens,
                 "previous_messages": 0,
+                "decision": result.get("decision"),
+            },
+            {
+                "nodes": [
+                    node(
+                        "AgentSession",
+                        agent_id,
+                        title="Fresh investigation context",
+                        provider=self.settings.provider,
+                        model=self.settings.model,
+                        previous_messages=0,
+                        status=result["status"],
+                        decision=result.get("decision"),
+                    )
+                ],
+                "edges": [],
             },
         )

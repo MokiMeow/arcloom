@@ -181,7 +181,11 @@ export function Overview({
           <header className="panel-head">
             <h2>Memory handoffs</h2>
             <span className="badge">
-              {d.model.live_llm ? d.model.provider : "Deterministic mode"}
+              {d.model.decision_model
+                ? "Cloudflare decision model"
+                : d.model.live_llm
+                  ? d.model.provider
+                  : "Deterministic mode"}
             </span>
           </header>
           <ErrorNotice message={agents.error} />

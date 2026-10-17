@@ -35,9 +35,11 @@ TOOL_DESCRIPTION = (
 
 @dataclass(frozen=True)
 class PlanResult:
-    selection: Selection
+    selection: Selection | None
     input_tokens: int = 0
     output_tokens: int = 0
+    decision: dict | None = None
+    reason: str | None = None
 
 
 class PlannerPort(Protocol):

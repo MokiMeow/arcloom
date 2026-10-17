@@ -208,9 +208,11 @@ export function Settings({
           <section className="panel padded">
             <p className="eyebrow">Planner configuration</p>
             <h2>
-              {d.model.live_llm
-                ? "Live model adapter enabled"
-                : "Deterministic graph planner"}
+              {d.model.decision_model
+                ? "Cloudflare decision model"
+                : d.model.live_llm
+                  ? "Live model adapter enabled"
+                  : "Deterministic graph planner"}
             </h2>
             <dl className="property-list">
               <div>
@@ -233,7 +235,7 @@ export function Settings({
             <div className="notice compact">
               <KeyRound size={16} />
               <span>
-                {d.model.live_llm
+                {d.model.remote_model
                   ? "Provider failures stay visible. There is no silent fallback."
                   : "This mode requires no API key and is not represented as a live language model."}
               </span>

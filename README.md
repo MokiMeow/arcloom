@@ -128,3 +128,11 @@ Read [architecture](docs/architecture.md), [security boundaries](docs/security.m
 ## Before sharing or submitting
 
 Keep the repository private until you explicitly choose otherwise. Check the event's submission rules, select a source-code license with your teammate, enable and test a real model if presenting LLM behavior, perform the Docker smoke test, and record actual executions rather than simulated success. No bounty reduction, discovery-rate uplift, or win is claimed without measurement.
+
+## October 17 upgrade: inspectable decision memory
+
+Arcloom now supports **Cloudflare Clef, Clef-flash and Clef-omni** as bounded decision selectors, with explicit abstention and persistent probability/usage receipts. The default remains deterministic until server-side credentials are configured. The Omni adapter is text-only; media intake is not implemented.
+
+Memory graph adds **native full-text search, evidence-withdrawal analysis with independent support, PageRank dependency inspection, and GRAPH.EXPLAIN**. Withdrawal is a read-only prerequisite experiment, not a claim that an upstream patch fixes every downstream vulnerability.
+
+See [Cloudflare setup and model choices](docs/cloudflare-clef.md), [graph intelligence and its limits](docs/graph-intelligence.md), [170-test upgrade validation](docs/upgrade-validation.md), and the [submission readiness audit](docs/submission-audit.md). Public-repository approval, a working demo video, live Cloudflare validation and a clean Docker startup are still outstanding.

@@ -147,9 +147,7 @@ class FalkorGraph:
                         )
         return self._db
 
-    def _query(
-        self, tenant: str, query: str, params: dict | None = None, readonly: bool = False
-    ):
+    def _query(self, tenant: str, query: str, params: dict | None = None, readonly: bool = False):
         try:
             graph = self._database().select_graph(self.graph_name(tenant))
             call = graph.ro_query if readonly else graph.query
@@ -282,9 +280,7 @@ class Projector:
     def flush(self, maximum: int = 100) -> int:
         with self._lock:
             if not self.store.acquire_lock("graph_projection", self.owner, 120):
-                raise DomainError(
-                    "graph_sync_busy", "Graph synchronization is in progress", 503
-                )
+                raise DomainError("graph_sync_busy", "Graph synchronization is in progress", 503)
             applied = 0
             try:
                 for row in self.store.all(

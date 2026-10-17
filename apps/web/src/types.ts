@@ -1,3 +1,4 @@
+import type { Decision } from "./components/DecisionReceipt";
 export type Role = "admin" | "reviewer" | "researcher" | "viewer";
 export interface Actor {
   id: string;
@@ -62,6 +63,8 @@ export interface Dashboard {
     provider: string;
     model: string;
     live_llm: boolean;
+    remote_model?: boolean;
+    decision_model?: boolean;
     input_tokens: number;
     output_tokens: number;
     sessions: number;
@@ -162,6 +165,7 @@ export interface GraphData {
   warning: string;
 }
 export interface Agent {
+  decision?: Decision | null;
   id: string;
   provider: string;
   model: string;

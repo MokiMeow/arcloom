@@ -301,9 +301,11 @@ function Workspace({
         <div className="mode-bar">
           <span>
             <span className="dot" />
-            {d.data?.model.live_llm
-              ? `Live ${d.data.model.provider} adapter · ${d.data.model.model}`
-              : "Deterministic planner · no live LLM calls"}
+            {d.data?.model.decision_model
+              ? `Cloudflare decision model · ${d.data.model.model}`
+              : d.data?.model.live_llm
+                ? `Live ${d.data.model.provider} adapter · ${d.data.model.model}`
+                : "Deterministic planner · no live LLM calls"}
           </span>
           <span>Controlled synthetic fixtures · no production targets</span>
         </div>

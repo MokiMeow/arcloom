@@ -303,12 +303,19 @@ def create_app(settings: Settings | None = None, runtime: Runtime | None = None)
     @app.get("/api/agents")
     def agents(who: Person, service: Service, limit: int = Query(50, ge=1, le=100)):
         items = service.store.all(
-            "SELECT * FROM agent_sessions WHERE tenant=? ORDER BY created_at DESC LIMIT ?",
+            "SELECT a.*, (SELECT e.payload FROM events e WHERE e.tenant=a.tenant "
+            "AND e.object_id=a.id AND e.kind='agent.context_finished' ORDER BY e.seq DESC LIMIT 1) "
+            "AS finish_payload FROM agent_sessions a WHERE tenant=? ORDER BY created_at DESC LIMIT ?",
             (who.tenant, limit),
         )
         return {
             "items": [
-                {**a, "candidates": json.loads(a["candidates"]), "previous_messages": 0}
+                {
+                    **{k: v for k, v in a.items() if k != "finish_payload"},
+                    "candidates": json.loads(a["candidates"]),
+                    "previous_messages": 0,
+                    "decision": json.loads(a["finish_payload"] or "{}").get("decision"),
+                }
                 for a in items
             ]
         }
@@ -321,6 +328,42 @@ def create_app(settings: Settings | None = None, runtime: Runtime | None = None)
             "selection_query": FOLLOWUPS_CYPHER,
             "warning": "A connected path is a hypothesis, not proof of a working chain.",
         }
+
+    def analyze(who: Actor, service: Runtime, operation):
+        service.store.limit("analysis_" + who.id, 30, 60)
+        if service.intelligence is None:
+            raise DomainError("graph_unavailable", "Native FalkorDB analysis is unavailable", 503)
+        service.projector.require_current(who.tenant)
+
+        def head():
+            return service.store.one(
+                "SELECT coalesce(max(seq),0) AS seq FROM events WHERE tenant=?", (who.tenant,)
+            )["seq"]
+
+        before = head()
+        revision = service.store.one("SELECT revision FROM tenants WHERE id=?", (who.tenant,))[
+            "revision"
+        ]
+        result = operation(service.intelligence, revision)
+        if head() != before:
+            raise DomainError(
+                "analysis_changed", "Workspace changed during analysis; refresh and try again", 409
+            )
+        return {**result, "event_head": before}
+
+    @app.get("/api/memory/search")
+    def search_memory(who: Person, service: Service, q: str = Query(min_length=1, max_length=100)):
+        return analyze(who, service, lambda tool, rev: tool.search(who.tenant, q))
+
+    @app.get("/api/memory/withdrawal")
+    def withdrawal(
+        who: Person, service: Service, finding_id: str = Query(min_length=1, max_length=100)
+    ):
+        return analyze(who, service, lambda tool, rev: tool.withdraw(who.tenant, rev, finding_id))
+
+    @app.get("/api/memory/diagnostics")
+    def diagnostics(who: Person, service: Service):
+        return analyze(who, service, lambda tool, rev: tool.diagnostics(who.tenant, rev))
 
     @app.get("/api/evidence/{artifact_hash}")
     def evidence(artifact_hash: str, who: Person, service: Service):

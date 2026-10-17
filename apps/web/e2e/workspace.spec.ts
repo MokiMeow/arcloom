@@ -72,6 +72,31 @@ test("real report, evidence, fresh agents, chain, graph and revision revalidatio
   await page.getByRole("button", { name: "Memory graph", exact: true }).click();
   await page.getByLabel("Graph focus").selectOption("");
   await expect(page.locator(".react-flow__node").first()).toBeVisible();
+  await page.getByLabel("Search graph memory").fill("invoice");
+  await page.getByRole("button", { name: "Search graph", exact: true }).click();
+  await expect(page.getByText(/indexed matches/)).toBeVisible();
+  const gatewayOption = await page
+    .getByLabel("Finding to withdraw")
+    .locator("option")
+    .evaluateAll(
+      (options) =>
+        options
+          .map((option) => ({
+            value: (option as HTMLOptionElement).value,
+            text: option.textContent ?? "",
+          }))
+          .find((option) => option.text.includes("Gateway"))?.value,
+    );
+  expect(gatewayOption).toBeTruthy();
+  await page.getByLabel("Finding to withdraw").selectOption(gatewayOption!);
+  await page.getByRole("button", { name: "Run withdrawal analysis" }).click();
+  await expect(page.getByText(/Supported test prerequisites:/)).toBeVisible();
+  await page
+    .getByRole("button", { name: "Inspect native query plan and PageRank" })
+    .click();
+  await expect(
+    page.getByRole("heading", { name: "Dependency importance" }),
+  ).toBeVisible();
   await page.screenshot({ path: "test-results/memory.png", fullPage: true });
   await page
     .getByRole("button", { name: "Workspace policy", exact: true })

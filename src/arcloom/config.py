@@ -40,10 +40,13 @@ class Settings(BaseSettings):
     lab_url: str = "http://127.0.0.1:9001"
     runner_secret: SecretStr = SecretStr("")
     lab_timeout_seconds: float = Field(8.0, ge=0.1, le=15)
-    provider: Literal["deterministic", "openai", "anthropic"] = "deterministic"
+    provider: Literal["deterministic", "openai", "anthropic", "cloudflare"] = "deterministic"
     model: str = ""
     model_api_key: SecretStr = SecretStr("")
     model_timeout_seconds: float = Field(20.0, ge=1, le=30)
+    cloudflare_account_id: str = ""
+    clef_min_confidence: float = Field(0.70, ge=0, le=1)
+    clef_min_margin: float = Field(0.15, ge=0, le=1)
     web_dist: Path = Path("apps/web/dist")
 
     @field_validator("graph_prefix", "tenant")
@@ -80,4 +83,16 @@ class Settings(BaseSettings):
             not self.model or not self.model_api_key.get_secret_value()
         ):
             raise ValueError("A model ID and API key are required for the selected model provider")
+        if self.provider == "cloudflare":
+            model = self.model.removeprefix("@cf/cloudflare/")
+            if model not in {"clef", "clef-flash", "clef-omni"}:
+                raise ValueError(
+                    "Use clef, clef-flash or clef-omni for the Cloudflare decision provider"
+                )
+            if len(self.cloudflare_account_id) != 32 or any(
+                c not in "0123456789abcdef" for c in self.cloudflare_account_id
+            ):
+                raise ValueError(
+                    "A 32-character lowercase hexadecimal Cloudflare account ID is required"
+                )
         return self

@@ -4,6 +4,8 @@ import { errorText, request, useRemote } from "../api";
 import type { Agent, AuditEvent, Events } from "../types";
 import { Empty, ErrorNotice, SectionHead, ShortId, formatDate } from "./ui";
 
+import { DecisionReceipt } from "./DecisionReceipt";
+
 export function Activity({
   revision,
   openCase,
@@ -171,6 +173,7 @@ export function Activity({
                       <strong>{a.input_tokens + a.output_tokens}</strong>
                     </span>
                   </div>
+                  <DecisionReceipt decision={a.decision} />
                   {a.case_id && (
                     <button
                       className="text-button"
