@@ -55,6 +55,42 @@ for (const width of [320, 390, 768, 1024, 1440]) {
     await contained();
     await navigate("Memory graph");
     await expect(page.locator(".react-flow")).toBeVisible();
+    async function graphFits() {
+      await expect
+        .poll(() =>
+          page.locator(".react-flow").evaluate((canvas) => {
+            const bounds = canvas.getBoundingClientRect();
+            const cards = [...canvas.querySelectorAll(".react-flow__node")];
+            return (
+              cards.length > 0 &&
+              cards.every((card) => {
+                const rect = card.getBoundingClientRect();
+                return (
+                  rect.left >= bounds.left &&
+                  rect.right <= bounds.right &&
+                  rect.top >= bounds.top &&
+                  rect.bottom <= bounds.bottom
+                );
+              })
+            );
+          }),
+        )
+        .toBe(true);
+    }
+    await graphFits();
+    const focus = page.getByRole("combobox", { name: "Graph focus" });
+    const investigation = await focus.inputValue();
+    await focus.selectOption("");
+    await expect(page.locator(".react-flow__node")).toHaveCount(43);
+    await graphFits();
+    await focus.selectOption(investigation);
+    await graphFits();
+    if (width === 1440) {
+      await page.setViewportSize({ width: 390, height: 844 });
+      await graphFits();
+      await page.setViewportSize({ width, height: 1000 });
+      await graphFits();
+    }
     await contained();
     await page
       .getByRole("combobox", { name: "Finding to withdraw" })

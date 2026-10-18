@@ -22,6 +22,8 @@ That human-defined flow shaped Arcloom's graph model, separate approval and revi
 
 [![Watch the narrated Arcloom demo](../media/demo-poster.png)](https://youtu.be/Z8RMloVLsig)
 
+Explore the [interactive UI demo](https://arcloom-demo-olbo855az-mokimeows-projects.vercel.app) to inspect the recorded `r1` and patched `r2` states in your browser. The public tour is read-only; the repository setup runs the full investigation workflow.
+
 ## Four states that never blur
 
 The first design decision was to keep four things apart that agent systems often merge: a **report**, a **proposed test**, a **runner observation**, and a **reviewed finding**.

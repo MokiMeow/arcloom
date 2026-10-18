@@ -1,5 +1,7 @@
 # Public UI demo
 
+**[Open the interactive Arcloom demo](https://arcloom-demo-olbo855az-mokimeows-projects.vercel.app)** · [Watch the narrated walkthrough](https://youtu.be/Z8RMloVLsig)
+
 The Vercel preview is an interactive, read-only tour of Arcloom. It uses the same React components as the full application with two explicit recorded synthetic states: a reviewed `r1` investigation and the post-patch `r2` workspace.
 
 Visitors can navigate every workspace view, filter investigations, inspect case details and receipts, explore the graph, inspect recorded withdrawal and diagnostic results, and download recorded investigation and handoff JSON. A visible demo banner and snapshot labels distinguish this tour from live execution.

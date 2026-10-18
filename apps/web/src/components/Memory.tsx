@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import {
   Background,
   BaseEdge,
@@ -9,6 +9,7 @@ import {
   Position,
   ReactFlow,
   useReactFlow,
+  useStore,
 } from "@xyflow/react";
 import type { Edge, EdgeProps, Node } from "@xyflow/react";
 import "@xyflow/react/dist/style.css";
@@ -61,40 +62,44 @@ function RelationshipEdge({
 }
 const edgeTypes = { relationship: RelationshipEdge };
 function GraphViewControls({ selectedId }: { selectedId?: string }) {
-  const { fitBounds, getNodes, getEdges, setCenter } = useReactFlow<
-    Node,
-    MemoryEdge
-  >();
+  const { fitBounds, getNodes, getEdges, setCenter, viewportInitialized } =
+    useReactFlow<Node, MemoryEdge>();
+  const nodeCount = useStore((state) => state.nodeLookup.size);
+  const width = useStore((state) => state.width);
+  const height = useStore((state) => state.height);
+  const fitGraph = useCallback(() => {
+    const cards = getNodes();
+    const routes = getEdges().flatMap((e) => e.data?.route.points ?? []);
+    if (!cards.length) return;
+    const left = Math.min(
+      ...cards.map((n) => n.position.x),
+      ...routes.map((p) => p.x),
+    );
+    const top = Math.min(
+      ...cards.map((n) => n.position.y),
+      ...routes.map((p) => p.y),
+    );
+    const right = Math.max(
+      ...cards.map((n) => n.position.x + GRAPH_CARD_WIDTH),
+      ...routes.map((p) => p.x),
+    );
+    const bottom = Math.max(
+      ...cards.map((n) => n.position.y + GRAPH_CARD_HEIGHT),
+      ...routes.map((p) => p.y + 20),
+    );
+    void fitBounds(
+      { x: left, y: top, width: right - left, height: bottom - top },
+      { padding: 0.18 },
+    );
+  }, [fitBounds, getNodes, getEdges]);
+  useEffect(() => {
+    if (!viewportInitialized || !nodeCount || width <= 0 || height <= 0) return;
+    const frame = requestAnimationFrame(fitGraph);
+    return () => cancelAnimationFrame(frame);
+  }, [viewportInitialized, nodeCount, width, height, fitGraph]);
   return (
     <Panel position="top-right" className="graph-view-controls">
-      <button
-        type="button"
-        onClick={() => {
-          const cards = getNodes();
-          const routes = getEdges().flatMap((e) => e.data?.route.points ?? []);
-          if (!cards.length) return;
-          const left = Math.min(
-            ...cards.map((n) => n.position.x),
-            ...routes.map((p) => p.x),
-          );
-          const top = Math.min(
-            ...cards.map((n) => n.position.y),
-            ...routes.map((p) => p.y),
-          );
-          const right = Math.max(
-            ...cards.map((n) => n.position.x + GRAPH_CARD_WIDTH),
-            ...routes.map((p) => p.x),
-          );
-          const bottom = Math.max(
-            ...cards.map((n) => n.position.y + GRAPH_CARD_HEIGHT),
-            ...routes.map((p) => p.y + 20),
-          );
-          void fitBounds(
-            { x: left, y: top, width: right - left, height: bottom - top },
-            { padding: 0.18 },
-          );
-        }}
-      >
+      <button type="button" onClick={fitGraph}>
         Fit graph
       </button>
       <button
@@ -288,8 +293,8 @@ export function Memory({
                 edgeTypes={edgeTypes}
                 edges={filtered.edges}
                 fitView
-                fitViewOptions={{ padding: 0.18, minZoom: 0.5, maxZoom: 0.9 }}
-                minZoom={0.08}
+                fitViewOptions={{ padding: 0.18, minZoom: 0.02, maxZoom: 0.9 }}
+                minZoom={0.02}
                 maxZoom={1.6}
                 nodesDraggable={false}
                 nodesConnectable={false}
