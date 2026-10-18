@@ -13,6 +13,7 @@ coverage.xml
 htmlcov/
 data/
 node_modules/
+*.tsbuildinfo
 apps/web/dist/
 playwright-report/
 test-results/
@@ -20,3 +21,6 @@ test-results/
 *.db
 *.db-*
 .DS_Store
+
+# Local editorial handoffs and event administration; public story lives in docs/blog.
+/docs/submission/

@@ -5,16 +5,15 @@ import time
 from contextlib import suppress
 from dataclasses import asdict
 
-from arcloom.agents import DeterministicPlanner, ModelPlanner
 from arcloom.auth import Auth
 from arcloom.catalog import ASSETS, REVISIONS, TESTS
-from arcloom.clef import ClefPlanner
 from arcloom.config import Settings
 from arcloom.discovery import Discovery
 from arcloom.domain import Actor, DomainError
 from arcloom.evidence import EvidenceStore
 from arcloom.graph import FalkorGraph, GraphPort, Projector, seed_graph
 from arcloom.intelligence import GraphIntelligence
+from arcloom.providers import ProviderManager
 from arcloom.runner import HttpRunner, RunnerPort
 from arcloom.storage import Store
 from arcloom.worker import Worker
@@ -40,17 +39,20 @@ class Runtime:
         )
         self.runner = runner if runner is not None else HttpRunner(settings)
         self.cases = Cases(self.store, settings, self.projector, self.evidence)
-        factory = planner_factory or (
-            lambda: (
-                DeterministicPlanner()
-                if settings.provider == "deterministic"
-                else ClefPlanner(settings)
-                if settings.provider == "cloudflare"
-                else ModelPlanner(settings)
-            )
-        )
+        from arcloom.chatgpt_auth import ChatGPTAuth
+
+        self.chatgpt = ChatGPTAuth(settings)
+        self.providers = ProviderManager(settings, self.store, self.chatgpt)
+        factory = planner_factory or (lambda: self.providers.planner(self.providers.snapshot()))
         self.discovery = Discovery(
-            self.store, settings, self.graph, self.projector, self.evidence, factory
+            self.store,
+            settings,
+            self.graph,
+            self.projector,
+            self.evidence,
+            factory,
+            settings_factory=self.providers.snapshot,
+            snapshot_planner_factory=None if planner_factory else self.providers.planner,
         )
         self.worker = Worker(self.store, settings, self.projector, self.runner, self.evidence)
 
@@ -76,6 +78,7 @@ class Runtime:
                 self.intelligence.prepare(self.settings.tenant)
 
     def dashboard(self, actor: Actor) -> dict:
+        provider = self.providers.snapshot()
         tenant = self.store.one("SELECT * FROM tenants WHERE id=?", (actor.tenant,))
         budget = self.store.one(
             "SELECT * FROM budgets WHERE tenant=? AND revision=?",
@@ -127,11 +130,12 @@ class Runtime:
                 "in_sync": graph_ok and pending == 0,
             },
             "model": {
-                "provider": self.settings.provider,
-                "model": self.settings.model or "graph-rank-v1",
-                "live_llm": self.settings.provider in {"openai", "anthropic"},
-                "remote_model": self.settings.provider != "deterministic",
-                "decision_model": self.settings.provider == "cloudflare",
+                "provider": provider.provider,
+                "model": provider.model
+                or ("graph-rank-v1" if provider.provider == "deterministic" else ""),
+                "live_llm": provider.provider in {"openai", "anthropic", "gemini", "chatgpt"},
+                "remote_model": provider.provider != "deterministic",
+                "decision_model": provider.provider == "cloudflare",
                 **agent_usage,
             },
             "worker": {
@@ -153,4 +157,5 @@ class Runtime:
 
     def close(self):
         self.worker.stop()
+        self.chatgpt.close()
         self.graph.close()

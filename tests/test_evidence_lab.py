@@ -139,7 +139,12 @@ def test_artifact_symlink_rejected(tmp_path):
     target.write_text("secret")
     p = e._path("alpha", sha)
     p.unlink()
-    p.symlink_to(target)
+    try:
+        p.symlink_to(target)
+    except OSError as error:
+        if getattr(error, "winerror", None) == 1314:
+            pytest.skip("Windows symlink creation requires Developer Mode or elevated privilege")
+        raise
     with pytest.raises(DomainError) as err:
         e.get("alpha", sha)
     assert err.value.code == "evidence_integrity"

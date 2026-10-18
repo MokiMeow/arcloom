@@ -1,25 +1,54 @@
-# Judge demo: memory changes the next investigation
+# Demo: memory changes the next investigation
 
-Use an empty persistent workspace, run `arcloom doctor`, confirm FalkorDB is synchronized, and verify whether the visible planner mode is deterministic or live. Synthetic seeded weaknesses must be disclosed.
+Use an empty persistent workspace with graph, API and lab running. Run `uv run --frozen arcloom doctor` and check the visible planner mode. The default is deterministic; live planning requires your own [configured provider](provider-setup.md). Every weakness below is a deliberately seeded synthetic fixture.
 
-1. Submit the registered gateway test with researcher attribution. Show `awaiting_approval`, not `confirmed`.
-2. Approve the test. Inspect real HTTP observations from the fixture, the receipt signature and SHA-256. Accept the recorded outcome to create the first finding.
-3. Terminate the first CLI process or begin a fresh UI investigator context. Show the new agent ID and zero previous messages. The UI path and inspectable Cypher should show the finding's capability making the invoice test eligible.
-4. Approve and review the invoice test. The evidence proves a separate tenant-ownership weakness, not merely a repeated gateway report.
-5. Start another fresh investigator. The chain test is eligible only now that both prerequisite capabilities are verified. Its real execution traverses both steps under one synthetic identity and revision.
-6. Run the export negative control and the unavailable audit test. Accept their observed outcomes; neither becomes a finding. Show that failed attempts remain in memory and do not reappear as new candidates.
-7. In Workspace policy, provide a rationale and advance to patched r2. All old verified findings remain visible as historical, with their unchanged evidence. Revalidate the gateway or chain and inspect the denied/blocked outcome.
+[Documentation index](index.md) · [Watch the demo](https://youtu.be/Z8RMloVLsig) · [Engineering story](blog/README.md)
 
-The browser suite runs the central sequence against actual FalkorDB and a separate authenticated HTTP runner. The process-handoff integration test establishes distinct OS PIDs. For a live presentation, run `uv run arcloom agent-once` from a new terminal process after each accepted result; approvals remain explicit in the UI.
+## Start a separate presentation workspace
 
-## Show a denied request without contacting anything external
+Keep the configured FalkorDB connection and ordinary `arcloom lab` process running. Then launch:
 
-Submit an API report referencing an unregistered test or asset. The application rejects it before queuing any network execution. Do not use a real third-party host merely to make the demonstration dramatic.
+```bash
+uv run --frozen arcloom demo --workspace data/presentation --port 8002
+```
 
-## Claims not to make
+Open [the presentation workspace](http://127.0.0.1:8002) in a separate browser profile or private browsing session. Session cookies share a hostname across ports, so a separate normal browser window alone does not isolate sessions. Sign in with the admin token from your private `.env`.
 
-Do not claim novel zero-day discovery from the intentionally seeded lab, production exploit safety, measured bounty savings, 100% correctness, or a live model call when the banner says deterministic. The contribution demonstrated here is evidence-backed graph memory, controlled execution, fresh-context continuation and honest temporal conclusions.
+The command creates a separate journal and graph identity, defaults to deterministic planning and preserves the main workspace's history. Repeating it resumes the same presentation. Its descriptor records connection metadata and refuses to resume against a changed graph connection. It does not copy provider credentials into that descriptor. Keep the graph and lab available throughout.
 
-## Submission checklist
+## Walkthrough
 
-Confirm the current event requirements yourself before submission. Keep this repository private until the owners authorize any visibility change. Prepare the public code location required by the event only after that decision, record actual test outputs, include setup instructions, the key Cypher/model schema, and AI-assistance disclosure. Select a code license with your teammate. No submission, video publication or visibility change was performed automatically.
+1. Submit **Gateway trusts an unverified routing context** with the original researcher's attribution. The case begins at `awaiting_approval`.
+2. Approve its registered lab test. Inspect the actual observations, signed receipt and SHA-256. Accept the recorded outcome to create the first finding.
+3. Start a fresh investigator. Inspect the new agent session and the FalkorDB path showing how the gateway finding's capability makes the invoice test eligible.
+4. Approve and review the invoice test. Its observation verifies a separate tenant-ownership weakness.
+5. Start another fresh investigator. Both verified capabilities now support the chain test. Approve it and inspect its sequential execution under one synthetic identity and revision.
+6. Run the export negative control and unavailable audit test. Accept their recorded outcomes. They remain negative or inconclusive memory and do not become confirmed findings or unexplored candidates.
+7. In Workspace policy, give a rationale and advance to patched `r2`. Earlier findings remain visible with unchanged receipts but become historical. Request revalidation and inspect the new blocked or not-reproduced observation before reviewing it.
+
+The [browser suite](testing.md) exercises the central workflow with actual FalkorDB and a separate authenticated HTTP lab. Evidence review is a distinct checkpoint from execution approval.
+
+## Demonstrate a real process boundary
+
+After accepting the preceding result in the presentation UI, launch a new
+command-line process against that same persistent workspace:
+
+```bash
+uv run --frozen arcloom agent-once --workspace data/presentation
+```
+
+The `--workspace` argument loads the presentation's journal, tenant and graph
+identity. Omit it to use the standard workspace configured by `.env`. Check a
+presentation's readiness with `uv run --frozen arcloom doctor --workspace
+data/presentation`. A UI fresh context and a new operating-system process are
+different demonstrations; show which one you actually used.
+
+The command proposes one investigation from persisted memory. It does not approve or execute that test. Close the process, review the next completed result in the UI, then launch another process. The separate-process integration test checks distinct operating-system process IDs; creating a fresh UI session alone demonstrates a fresh context rather than an OS restart.
+
+## Inspect the boundaries
+
+Submit an API report with an unregistered test/asset pair and observe rejection before execution. The test catalog is the permitted target inventory. There is no need to contact an external host to demonstrate scope enforcement.
+
+Search the graph, select a current finding and run withdrawal analysis. Follow the recorded provenance and inspect whether independent evidence still supports a capability. PageRank describes dependency structure; withdrawal describes prerequisite support. Neither is a vulnerability probability or proof that every downstream issue is patched.
+
+The workflow demonstrates evidence-backed memory, controlled execution, fresh-context continuation and revision-aware conclusions. The [engineering story](blog/README.md) explains the implementation, and the [demo assets](media/README.md) include the narrated walkthrough and captions.

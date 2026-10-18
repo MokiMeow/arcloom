@@ -8,7 +8,7 @@ from arcloom.catalog import TESTS
 from arcloom.config import Settings
 from arcloom.domain import DomainError, Outcome
 from arcloom.evidence import verify_receipt
-from arcloom.http_boundary import bounded_json
+from arcloom.http_boundary import DeadlineTransport, bounded_json
 from arcloom.lab import RunPlan
 
 
@@ -52,7 +52,12 @@ class HttpRunner:
             )
         try:
             with httpx.Client(
-                timeout=self.settings.lab_timeout_seconds, follow_redirects=False, trust_env=False
+                timeout=self.settings.lab_timeout_seconds,
+                follow_redirects=False,
+                trust_env=False,
+                transport=DeadlineTransport(
+                    self.settings.lab_timeout_seconds, error_prefix="runner"
+                ),
             ) as client:
                 receipt = bounded_json(
                     client,

@@ -1,56 +1,40 @@
-# Cloudflare Clef decision provider
+# Cloudflare Clef decision adapter
 
-Research and integration review: 17 October 2026. The Cloudflare family is **Clef**, **Clef-flash**, and **Clef-omni**. These are decision models, not general-purpose code-generating agents.
+The Cloudflare adapter selects among evidence-backed graph candidates through Workers AI. Clef, Clef-flash and Clef-omni use the same bounded structured-text contract in Arcloom. FastAPI calls the official REST API directly; using the provider does not deploy the backend to Workers.
 
-## Model choice
+[Documentation index](index.md) · [Provider setup](provider-setup.md) · [Validation](testing.md)
 
-| Model | Published size | Hosted context | USD / million input tokens | Arcloom role |
-|---|---|---|---|---|
-| `@cf/cloudflare/clef` | 27B | 64K | 0.240 | Recommended starting point for text-based graph candidate selection; validate on our own decisions before calling it best. |
-| `@cf/cloudflare/clef-flash` | 9B | 24K | 0.038 | Cost-sensitive selection and a future high-volume intake classifier. |
-| `@cf/cloudflare/clef-omni` | 30B MoE, 3B active | 64K | 0.150 | A candidate for multimodal intake; this adapter currently sends only structured text. |
+## Decision contract
 
-Clef and Flash launched on October 1. The October 9 update introduced Omni, reduced hosted Flash context and price, and improved Clef serving speed without changing its weights. No output-token charge is listed for the family. Self-hosted Flash context is different from its hosted limit.
+1. FalkorDB identifies eligible revision-compatible registered tests and their verified prerequisites.
+2. Arcloom verifies supporting evidence before providing up to ten candidates.
+3. A `choice` question selects a candidate or `abstain`; a separate `noul` question scores uncertainty or contradiction.
+4. The response must match the requested model, question IDs, types, candidate IDs, finite normalized probabilities and reported usage.
+5. A choice becomes a proposal only when confidence is at least 0.70, the top-two margin is at least 0.15 and caution is below 0.50. These initial configurable thresholds are not calibrated guarantees.
+6. Abstention becomes `needs_review`: it consumes the recorded model call and creates no test job or finding.
+7. A proposal still needs deterministic scope/budget checks, human execution approval, a registered synthetic test and separate evidence acceptance.
 
-Sources: [October 9 changelog](https://developers.cloudflare.com/changelog/post/2026-10-09-clef-omni-workers-ai/), [Workers AI release history](https://developers.cloudflare.com/changelog/product/workers-ai/), [pricing](https://developers.cloudflare.com/workers-ai/platform/pricing/), [Clef](https://developers.cloudflare.com/workers-ai/models/clef/), [Flash](https://developers.cloudflare.com/workers-ai/models/clef-flash/), [Omni](https://developers.cloudflare.com/workers-ai/models/clef-omni/).
+The explanation is assembled from the actual graph path; it is not presented as model-written prose. Application code attaches trusted source findings. The decision receipt persists option probabilities, confidence, margin, caution, latency, token usage, input hash, model ID and an estimated inference cost. Inspect receipts in Agent activity.
 
-Newest does not establish best. Cloudflare's published PhishNChips accuracy is 79.60 for Clef, 75.05 for Flash, and 73.2 for Omni, while Omni leads other published benchmarks. Those are vendor benchmarks, not Arcloom vulnerability-discovery results. Our choice is provisional until a held-out Arcloom decision set measures quality, abstention, latency, and total cost.
+Input is capped at 20,000 UTF-8 bytes, including instructions and questions. The adapter exposes candidate decisions rather than arbitrary URLs, shell commands, Cypher or generated code. Provider errors are explicit. The current Omni adapter sends structured text; media processing requires a separately designed intake and evidence contract.
 
-## Implemented contract
+## Configure
 
-FastAPI calls Workers AI directly over its official REST API. The backend does not need to move to Workers to use the models.
-
-1. FalkorDB identifies eligible, revision-compatible registered tests and their verified prerequisites.
-2. Arcloom verifies the supporting evidence before providing up to ten candidates to Clef.
-3. One `choice` question selects a candidate or `abstain`; a separate `noul` question scores uncertainty/contradiction.
-4. The response must match the requested model, question IDs, types, candidate IDs, normalized finite probabilities, and reported usage.
-5. A choice becomes a proposal only when confidence is at least 0.70, the top-two margin is at least 0.15, and the caution score is below 0.50. These are initial configurable thresholds, not calibrated guarantees.
-6. Abstention becomes `needs_review`. It consumes the recorded model call but creates no test job and no finding.
-7. Every selection still needs deterministic scope/budget checks, execution approval, a registered synthetic test, and independent evidence review.
-
-The explanation is assembled from the returned graph path; it is not presented as text generated by Clef. Trusted source finding IDs are attached by application code. The decision receipt stores all option probabilities, confidence, margin, caution, latency, token usage, input hash, model ID, and an estimated inference cost. Receipts persist in the audit journal and FalkorDB AgentSession nodes and can be inspected in Agent activity.
-
-The adapter does not expose arbitrary URLs, shell commands, Cypher, code generation, or automatic provider fallback. It does not bypass approvals. Model failures are explicit and do not become successful findings. Input is capped at 20,000 UTF-8 bytes, including instructions and questions, rather than relying on silent upstream truncation.
-
-## Configuration
-
-Generate the local `.env` using `python scripts/configure.py`, then set the following privately:
+Create private credentials with `python scripts/configure.py`, then use Workspace policy or set:
 
 ```dotenv
 ARCLOOM_PROVIDER=cloudflare
-ARCLOOM_MODEL=@cf/cloudflare/clef
-ARCLOOM_CLOUDFLARE_ACCOUNT_ID=YOUR_32_CHARACTER_LOWERCASE_HEX_ACCOUNT_ID
-ARCLOOM_MODEL_API_KEY=YOUR_WORKERS_AI_API_TOKEN
+ARCLOOM_MODEL=@cf/cloudflare/clef-flash
+ARCLOOM_CLOUDFLARE_ACCOUNT_ID=<your account ID>
+ARCLOOM_MODEL_API_KEY=<your scoped Workers AI token>
 ARCLOOM_CLEF_MIN_CONFIDENCE=0.70
 ARCLOOM_CLEF_MIN_MARGIN=0.15
 ```
 
-Use a least-privilege Workers AI token. Do not paste real credentials into chat, commit them, or place them in browser environment variables. The configuration accepts either full model IDs or `clef`, `clef-flash`, and `clef-omni`. Restart the backend after changing settings. The default remains explicitly deterministic when no provider has been configured.
+The adapter accepts full IDs or the short names `clef`, `clef-flash` and `clef-omni`. Restart after changing environment values. The [provider guide](provider-setup.md) covers saved profiles and the existing-Wrangler-login helper, including its expiring credential snapshot.
 
-## Validation limits and next experiments
+## Evaluate a model choice
 
-All three provider variants have mocked protocol tests, including malformed outputs, abstentions, unknown options, invalid usage, account-path validation, and provider errors. **No live Cloudflare inference was performed in this build.** Mocked contracts do not establish hosted model quality or account access.
+Contract tests cover malformed output, abstention, unknown choices, invalid usage, account-path validation and provider errors. Recorded live Clef-flash calls returned valid low-confidence abstentions under unchanged thresholds. That establishes transport compatibility for those calls, not candidate-selection quality. [Testing](testing.md) gives the current evidence.
 
-Before the final video, configure a real account, run an approved synthetic investigation, and inspect the returned receipt. Record failures and abstentions too. Compare the three models on the same labeled candidate sets with the same graph evidence and budget. Keep evaluation labels outside model inputs, separate tuning from held-out evaluation, and report counts alongside rates. Do not describe model confidence as vulnerability probability.
-
-Omni's image/audio/video support is a future extension, not an implemented feature here. It would need protected uploads, MIME and decoded-size checks, private storage, consent, and explicit media-to-evidence attribution. Media classification alone must never establish a confirmed finding. AI Gateway routing/observability and fine-tuning are also not implemented.
+Compare models on the same labeled candidate sets and graph evidence. Keep evaluation labels outside model inputs, separate tuning from held-out evaluation, and measure correct selection, unsafe choices, abstention, latency and usage. Decision confidence is not vulnerability probability. Consult current [model documentation](https://developers.cloudflare.com/workers-ai/models/) and [pricing](https://developers.cloudflare.com/workers-ai/platform/pricing/) for availability and rates.

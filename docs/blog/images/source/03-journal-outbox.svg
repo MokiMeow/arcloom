@@ -1,0 +1,40 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="980" viewBox="0 0 1200 980" role="img" aria-label="Workflow transaction commits state, audit, budget and an outbox row together; a projector applies ordered MERGE operations to FalkorDB; discovery reads candidates only after the outbox is drained and fails closed if the graph is unavailable">
+<title>Workflow transaction commits state, audit, budget and an outbox row together; a projector applies ordered MERGE operations to FalkorDB; discovery reads candidates only after the outbox is drained and fails closed if the graph is unavailable</title>
+<defs><marker id="a" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="18" markerHeight="18" markerUnits="userSpaceOnUse" orient="auto-start-reverse"><path d="M0 0 L10 5 L0 10z" fill="#1f3029"/></marker><marker id="b" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse"><path d="M0 0 L10 5 L0 10z" fill="#b54b2a"/></marker></defs>
+<rect width="1200" height="980" fill="#f6f3ec"/>
+<text x="60" y="74" font-family="DM Sans, Segoe UI, Helvetica, Arial, sans-serif" font-size="40" font-weight="700" fill="#1f3029" text-anchor="start">One source of truth, one reasoning engine</text>
+<text x="60" y="114" font-family="DM Sans, Segoe UI, Helvetica, Arial, sans-serif" font-size="26" font-weight="400" fill="#5b6a61" text-anchor="start">SQLite records what happened. FalkorDB answers what is eligible next.</text>
+<rect x="60" y="160" width="470" height="250" rx="16" fill="#ffffff" stroke="#1f3029" stroke-width="3"/>
+<text x="86" y="204" font-family="Consolas, SFMono-Regular, Menlo, monospace" font-size="20" font-weight="700" fill="#1f3029" text-anchor="start">WORKFLOW TRANSACTION</text>
+<text x="86" y="246" font-family="DM Sans, Segoe UI, Helvetica, Arial, sans-serif" font-size="32" font-weight="700" fill="#1f3029" text-anchor="start">Committed together</text>
+<text x="86" y="286" font-family="DM Sans, Segoe UI, Helvetica, Arial, sans-serif" font-size="25" font-weight="400" fill="#5b6a61" text-anchor="start">Case state · audit record</text>
+<text x="86" y="320" font-family="DM Sans, Segoe UI, Helvetica, Arial, sans-serif" font-size="25" font-weight="400" fill="#5b6a61" text-anchor="start">Budget reservation</text>
+<text x="86" y="354" font-family="DM Sans, Segoe UI, Helvetica, Arial, sans-serif" font-size="25" font-weight="400" fill="#5b6a61" text-anchor="start">Outbox row with graph change</text>
+<rect x="670" y="160" width="470" height="250" rx="16" fill="#ffffff" stroke="#a8792f" stroke-width="3"/>
+<text x="696" y="204" font-family="Consolas, SFMono-Regular, Menlo, monospace" font-size="20" font-weight="700" fill="#a8792f" text-anchor="start">PROJECTOR</text>
+<text x="696" y="246" font-family="DM Sans, Segoe UI, Helvetica, Arial, sans-serif" font-size="32" font-weight="700" fill="#1f3029" text-anchor="start">Ordered MERGE</text>
+<text x="696" y="286" font-family="DM Sans, Segoe UI, Helvetica, Arial, sans-serif" font-size="25" font-weight="400" fill="#5b6a61" text-anchor="start">Idempotent and ordered</text>
+<text x="696" y="320" font-family="DM Sans, Segoe UI, Helvetica, Arial, sans-serif" font-size="25" font-weight="400" fill="#5b6a61" text-anchor="start">Holds a projection lease</text>
+<text x="696" y="354" font-family="DM Sans, Segoe UI, Helvetica, Arial, sans-serif" font-size="25" font-weight="400" fill="#5b6a61" text-anchor="start">Replays never duplicate</text>
+<rect x="670" y="480" width="470" height="250" rx="16" fill="#ffffff" stroke="#2f6b55" stroke-width="3"/>
+<text x="696" y="524" font-family="Consolas, SFMono-Regular, Menlo, monospace" font-size="20" font-weight="700" fill="#2f6b55" text-anchor="start">FALKORDB</text>
+<text x="696" y="566" font-family="DM Sans, Segoe UI, Helvetica, Arial, sans-serif" font-size="32" font-weight="700" fill="#1f3029" text-anchor="start">Graph memory</text>
+<text x="696" y="606" font-family="DM Sans, Segoe UI, Helvetica, Arial, sans-serif" font-size="25" font-weight="400" fill="#5b6a61" text-anchor="start">Findings, capabilities, tests</text>
+<text x="696" y="640" font-family="DM Sans, Segoe UI, Helvetica, Arial, sans-serif" font-size="25" font-weight="400" fill="#5b6a61" text-anchor="start">Revision-scoped support</text>
+<text x="696" y="674" font-family="DM Sans, Segoe UI, Helvetica, Arial, sans-serif" font-size="25" font-weight="400" fill="#5b6a61" text-anchor="start">Provenance paths</text>
+<rect x="60" y="480" width="470" height="250" rx="16" fill="#ffffff" stroke="#b54b2a" stroke-width="3"/>
+<text x="86" y="524" font-family="Consolas, SFMono-Regular, Menlo, monospace" font-size="20" font-weight="700" fill="#b54b2a" text-anchor="start">DISCOVERY</text>
+<text x="86" y="566" font-family="DM Sans, Segoe UI, Helvetica, Arial, sans-serif" font-size="32" font-weight="700" fill="#1f3029" text-anchor="start">Reads the graph</text>
+<text x="86" y="606" font-family="DM Sans, Segoe UI, Helvetica, Arial, sans-serif" font-size="25" font-weight="400" fill="#5b6a61" text-anchor="start">Waits until the outbox</text>
+<text x="86" y="640" font-family="DM Sans, Segoe UI, Helvetica, Arial, sans-serif" font-size="25" font-weight="400" fill="#5b6a61" text-anchor="start">is drained</text>
+<text x="86" y="674" font-family="DM Sans, Segoe UI, Helvetica, Arial, sans-serif" font-size="25" font-weight="400" fill="#5b6a61" text-anchor="start">Graph down → 503, no fallback</text>
+<line x1="530" y1="285" x2="662" y2="285" stroke="#1f3029" stroke-width="3" marker-end="url(#a)"/>
+<text x="600" y="270" font-family="Consolas, SFMono-Regular, Menlo, monospace" font-size="22" font-weight="700" fill="#1f3029" text-anchor="middle">outbox</text>
+<line x1="905" y1="410" x2="905" y2="472" stroke="#1f3029" stroke-width="3" marker-end="url(#a)"/>
+<line x1="670" y1="605" x2="538" y2="605" stroke="#1f3029" stroke-width="3" marker-end="url(#a)"/>
+<text x="600" y="590" font-family="Consolas, SFMono-Regular, Menlo, monospace" font-size="22" font-weight="700" fill="#1f3029" text-anchor="middle">candidates</text>
+<rect x="60" y="780" width="1080" height="140" rx="16" fill="#efebe0"/>
+<text x="90" y="830" font-family="DM Sans, Segoe UI, Helvetica, Arial, sans-serif" font-size="26" font-weight="700" fill="#1f3029" text-anchor="start">Recorded during the demo run:</text>
+<text x="90" y="872" font-family="DM Sans, Segoe UI, Helvetica, Arial, sans-serif" font-size="25" font-weight="400" fill="#5b6a61" text-anchor="start">a second process started while the server held the projection lease, exited with</text>
+<text x="90" y="906" font-family="DM Sans, Segoe UI, Helvetica, Arial, sans-serif" font-size="25" font-weight="400" fill="#5b6a61" text-anchor="start">“Graph synchronization is in progress”, proposed nothing, and succeeded on retry.</text>
+</svg>

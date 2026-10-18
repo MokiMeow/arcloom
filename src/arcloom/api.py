@@ -31,6 +31,9 @@ from arcloom.domain import (
     State,
 )
 from arcloom.graph import FOLLOWUPS_CYPHER
+from arcloom.graph_hosting import GraphTargetInput, hosting_status, save_target
+from arcloom.handoff import build_handoff
+from arcloom.providers import ChatGPTProfileInput, ProviderInput
 from arcloom.runtime import Runtime
 from arcloom.storage import canonical, digest
 
@@ -223,7 +226,11 @@ def create_app(settings: Settings | None = None, runtime: Runtime | None = None)
             service.projector.require_current(settings.tenant)
         except DomainError:
             return JSONResponse({"status": "not_ready", "graph": "unavailable_or_pending"}, 503)
-        return {"status": "ready", "graph": "FalkorDB", "provider": settings.provider}
+        return {
+            "status": "ready",
+            "graph": "FalkorDB",
+            "provider": service.providers.snapshot().provider,
+        }
 
     @app.post("/api/auth/login")
     def login(value: LoginInput, request: Request, response: Response, service: Service):
@@ -260,6 +267,60 @@ def create_app(settings: Settings | None = None, runtime: Runtime | None = None)
     @app.get("/api/catalog")
     def catalog(who: Person, service: Service):
         return service.catalog()
+
+    @app.get("/api/providers")
+    def providers(who: Person, service: Service):
+        require(who, Role.ADMIN)
+        return service.providers.status()
+
+    @app.get("/api/graph-hosting")
+    def graph_hosting(who: Person, service: Service):
+        require(who, Role.ADMIN)
+        return hosting_status(service.settings)
+
+    @app.post("/api/graph-hosting/target")
+    def stage_graph_target(value: GraphTargetInput, who: Person, service: Service):
+        require(who, Role.ADMIN)
+        result = save_target(service.settings, value)
+        service.providers.audit(who, "graph.connection_staged", {"ssl": value.ssl})
+        return result
+
+    @app.post("/api/providers")
+    def configure_provider(value: ProviderInput, who: Person, service: Service):
+        return service.providers.configure(who, **value.model_dump())
+
+    @app.post("/api/providers/test")
+    def test_provider(who: Person, service: Service):
+        return service.providers.test(who)
+
+    @app.post("/api/providers/chatgpt/start")
+    def start_chatgpt(value: ChatGPTProfileInput, who: Person, service: Service):
+        require(who, Role.ADMIN)
+        service.store.limit("chatgpt_start_" + who.tenant, 5, 60)
+        result = service.chatgpt.start(value.profile_id)
+        service.providers.audit(who, "provider.chatgpt_login_started", {"provider": "chatgpt"})
+        return result
+
+    @app.get("/api/providers/chatgpt/models")
+    def chatgpt_models(
+        who: Person,
+        service: Service,
+        profile_id: str | None = Query(None, max_length=80, pattern=r"^[A-Za-z0-9_-]+$"),
+    ):
+        require(who, Role.ADMIN)
+        service.store.limit("chatgpt_models_" + who.tenant, 10, 60)
+        return {
+            "items": service.chatgpt.models(
+                profile_id or service.providers.snapshot().chatgpt_profile_id or None
+            )
+        }
+
+    @app.post("/api/providers/chatgpt/disconnect")
+    def disconnect_chatgpt(value: ChatGPTProfileInput, who: Person, service: Service):
+        require(who, Role.ADMIN)
+        result = service.chatgpt.disconnect(value.profile_id)
+        service.providers.audit(who, "provider.chatgpt_disconnected", {"provider": "chatgpt"})
+        return result
 
     @app.get("/api/investigations")
     def cases(
@@ -319,6 +380,11 @@ def create_app(settings: Settings | None = None, runtime: Runtime | None = None)
                 for a in items
             ]
         }
+
+    @app.get("/api/memory/handoff")
+    def handoff(who: Person, service: Service):
+        service.store.limit("handoff_" + who.id, 30, 60)
+        return build_handoff(service, who)
 
     @app.get("/api/memory")
     def memory(who: Person, service: Service):
@@ -443,8 +509,7 @@ def create_app(settings: Settings | None = None, runtime: Runtime | None = None)
         def index():
             return {
                 "application": "Arcloom",
-                "frontend": "Build apps/web or use its Vite development server",
-                "docs": "/docs",
+                "frontend": "Build the frontend with npm --prefix apps/web ci and npm --prefix apps/web run build, then restart.",
             }
 
     return app

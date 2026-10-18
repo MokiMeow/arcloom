@@ -188,6 +188,17 @@ def test_duplicate_approval_only_runs_once(runtime, owner):
     assert runtime.dashboard(owner)["budget"]["executions"] == 1
 
 
+def test_completed_approval_replay_survives_graph_outage(runtime, owner):
+    cid = report(runtime, owner)["case_id"]
+    value = ApprovalInput(decision="approve", reason="Run exactly once in the lab.")
+    first = runtime.cases.approve(owner, cid, value, "replay-approval-outage")
+    runtime.graph.available = False
+
+    assert runtime.cases.approve(owner, cid, value, "replay-approval-outage") == first
+    assert len(runtime.store.all("SELECT * FROM jobs")) == 1
+    assert runtime.runner.calls == []
+
+
 def test_concurrent_approval_has_single_winner(runtime, owner):
     cid = report(runtime, owner)["case_id"]
 

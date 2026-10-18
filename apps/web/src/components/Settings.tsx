@@ -1,6 +1,5 @@
 import { useState } from "react";
 import {
-  KeyRound,
   ShieldCheck,
   Pause,
   Play,
@@ -10,6 +9,8 @@ import {
 import { errorText, request, useRemote } from "../api";
 import type { Dashboard, Role } from "../types";
 import { ErrorNotice, SectionHead, formatDate } from "./ui";
+import { ProviderSettings } from "./ProviderSettings";
+import { GraphHostingSettings } from "./GraphHostingSettings";
 
 interface Member {
   id: string;
@@ -82,6 +83,16 @@ export function Settings({
       changed();
     } catch (e) {
       setError(errorText(e));
+    }
+  }
+  async function copyToken() {
+    if (!newToken) return;
+    try {
+      if (!navigator.clipboard?.writeText)
+        throw new Error("Clipboard unavailable");
+      await navigator.clipboard.writeText(newToken);
+    } catch {
+      setError("Clipboard unavailable. Select and copy the token manually.");
     }
   }
   return (
@@ -205,47 +216,13 @@ export function Settings({
           </section>
         </div>
         <div className="stack">
-          <section className="panel padded">
-            <p className="eyebrow">Planner configuration</p>
-            <h2>
-              {d.model.decision_model
-                ? "Cloudflare decision model"
-                : d.model.live_llm
-                  ? "Live model adapter enabled"
-                  : "Deterministic graph planner"}
-            </h2>
-            <dl className="property-list">
-              <div>
-                <dt>Provider</dt>
-                <dd>{d.model.provider}</dd>
-              </div>
-              <div>
-                <dt>Model / policy</dt>
-                <dd>{d.model.model}</dd>
-              </div>
-              <div>
-                <dt>Recorded input tokens</dt>
-                <dd>{d.model.input_tokens}</dd>
-              </div>
-              <div>
-                <dt>Recorded output tokens</dt>
-                <dd>{d.model.output_tokens}</dd>
-              </div>
-            </dl>
-            <div className="notice compact">
-              <KeyRound size={16} />
-              <span>
-                {d.model.remote_model
-                  ? "Provider failures stay visible. There is no silent fallback."
-                  : "This mode requires no API key and is not represented as a live language model."}
-              </span>
-            </div>
-            <p className="footnote">
-              To use OpenAI or Anthropic, set the provider, model ID and key in
-              the server environment and restart. Keys never enter this UI,
-              graph data, or agent prompts.
-            </p>
-          </section>
+          <ProviderSettings
+            model={d.model}
+            revision={revision}
+            changed={changed}
+            role={role}
+          />
+          <GraphHostingSettings revision={revision} role={role} />
           {role === "admin" && (
             <section className="panel padded">
               <p className="eyebrow">Team access</p>
@@ -284,6 +261,7 @@ export function Settings({
                 <label>
                   Role
                   <select
+                    aria-label="Member role"
                     value={newRole}
                     onChange={(e) => setNewRole(e.target.value as Role)}
                   >
@@ -305,15 +283,7 @@ export function Settings({
                   <code>{newToken}</code>
                   <button
                     className="text-button"
-                    onClick={() =>
-                      void navigator.clipboard
-                        .writeText(newToken)
-                        .catch(() =>
-                          setError(
-                            "Clipboard unavailable. Select and copy the token manually.",
-                          ),
-                        )
-                    }
+                    onClick={() => void copyToken()}
                   >
                     <Copy size={14} />
                     Copy token

@@ -36,6 +36,25 @@ def settings(provider):
 
 def response(provider, selection=None):
     s = SELECTION if selection is None else selection
+    if provider == "gemini":
+        return {
+            "candidates": [
+                {
+                    "content": {
+                        "role": "model",
+                        "parts": [{"functionCall": {"name": TOOL_NAME, "args": s}}],
+                    },
+                    "finishReason": "STOP",
+                    "index": 0,
+                }
+            ],
+            "usageMetadata": {
+                "promptTokenCount": 250,
+                "candidatesTokenCount": 65,
+                "totalTokenCount": 315,
+            },
+            "modelVersion": "gemini-3.5-flash-lite",
+        }
     return (
         {
             "output": [{"type": "function_call", "name": TOOL_NAME, "arguments": json.dumps(s)}],
@@ -49,7 +68,7 @@ def response(provider, selection=None):
     )
 
 
-@pytest.mark.parametrize("provider", ["openai", "anthropic"])
+@pytest.mark.parametrize("provider", ["openai", "anthropic", "gemini"])
 def test_live_model_adapter_contract_with_stub(provider):
     seen = []
 
@@ -61,15 +80,42 @@ def test_live_model_adapter_contract_with_stub(provider):
             assert body["store"] is False and body["parallel_tool_calls"] is False
             schema = body["tools"][0]["parameters"]
             context = json.loads(body["input"][0]["content"])
-        else:
+        elif provider == "anthropic":
             assert req.url.host == "api.anthropic.com"
             assert body["tool_choice"]["disable_parallel_tool_use"]
             schema = body["tools"][0]["input_schema"]
             context = json.loads(body["messages"][0]["content"])
+        else:
+            assert req.url.host == "generativelanguage.googleapis.com"
+            assert (
+                req.url.path
+                == "/v1beta/models/test-model-not-a-production-recommendation:generateContent"
+            )
+            assert req.headers["x-goog-api-key"] == "test-provider-key"
+            assert not req.url.query
+            assert body["generationConfig"] == {"maxOutputTokens": 700, "candidateCount": 1}
+            assert body["toolConfig"]["functionCallingConfig"] == {
+                "mode": "ANY",
+                "allowedFunctionNames": [TOOL_NAME],
+            }
+            assert body["systemInstruction"]["parts"][0]["text"]
+            assert set(body) == {
+                "systemInstruction",
+                "contents",
+                "generationConfig",
+                "tools",
+                "toolConfig",
+            }
+            tool = body["tools"][0]["functionDeclarations"][0]
+            schema = tool["parametersJsonSchema"]
+            assert tool["name"] == TOOL_NAME
+            assert len(body["tools"][0]["functionDeclarations"]) == 1
+            context = json.loads(body["contents"][0]["parts"][0]["text"])
         assert schema["additionalProperties"] is False
         assert set(schema["required"]) == {"candidate_id", "reason", "evidence_ids"}
         assert context["previous_conversation"] == []
-        assert body["tools"][0]["name"] == TOOL_NAME
+        if provider != "gemini":
+            assert body["tools"][0]["name"] == TOOL_NAME
         assert len(body["tools"]) == 1
         return httpx.Response(200, json=response(provider))
 
@@ -168,3 +214,22 @@ def test_deterministic_mode_has_zero_model_tokens():
     result = DeterministicPlanner().select([CANDIDATE])
     assert result.input_tokens == result.output_tokens == 0
     assert "hypothesis" in result.selection.reason
+
+
+@pytest.mark.parametrize("provider", ["openai", "anthropic"])
+@pytest.mark.parametrize("malformed", ["null_item", "null_usage", "invalid_usage"])
+def test_malformed_provider_envelope_is_a_controlled_failure(provider, malformed):
+    data = response(provider)
+    if malformed == "null_item":
+        data["output" if provider == "openai" else "content"] = [None]
+    elif malformed == "null_usage":
+        data["usage"] = None
+    else:
+        data["usage"] = {"input_tokens": float("inf")}
+    planner = ModelPlanner(
+        settings(provider),
+        httpx.MockTransport(lambda _: httpx.Response(200, content=json.dumps(data))),
+    )
+    with pytest.raises(DomainError) as error:
+        planner.select([CANDIDATE])
+    assert error.value.code == "model_unavailable"

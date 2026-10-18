@@ -140,6 +140,7 @@ class FalkorGraph:
                         self._db = FalkorDB(
                             host=self.settings.graph_host,
                             port=self.settings.graph_port,
+                            username=self.settings.graph_username or None,
                             password=self.settings.graph_password.get_secret_value() or None,
                             ssl=self.settings.graph_ssl,
                             socket_timeout=3,

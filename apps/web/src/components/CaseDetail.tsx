@@ -7,7 +7,7 @@ import {
   Clock3,
   Fingerprint,
 } from "lucide-react";
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { errorText, request, useRemote } from "../api";
 import type { Case, Role } from "../types";
 import {
@@ -44,6 +44,13 @@ export function CaseDetail({
   const [actionError, setActionError] = useState<string | null>(null);
   const [verified, setVerified] = useState<string | null>(null);
   const canReview = role === "admin" || role === "reviewer";
+  const active = useRef(true);
+  useEffect(() => {
+    active.current = true;
+    return () => {
+      active.current = false;
+    };
+  }, []);
   async function act(path: string, value: unknown = {}) {
     setBusy(true);
     setActionError(null);
@@ -53,15 +60,16 @@ export function CaseDetail({
         status?: string;
         reason?: string;
       }>(path, "POST", value);
-      setReason("");
       changed();
+      if (!active.current) return;
+      setReason("");
       if (result.case_id && result.case_id !== id) openCase(result.case_id);
       if (result.status === "no_candidates")
         setActionError(result.reason ?? "No new supported candidates remain.");
     } catch (e) {
-      setActionError(errorText(e));
+      if (active.current) setActionError(errorText(e));
     } finally {
-      setBusy(false);
+      if (active.current) setBusy(false);
     }
   }
   async function verifyEvidence(hash: string) {

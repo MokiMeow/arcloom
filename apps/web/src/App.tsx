@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { lazy, Suspense, useEffect, useRef, useState } from "react";
 import {
   Activity as ActivityIcon,
   ArrowRight,
@@ -8,23 +8,30 @@ import {
   LayoutDashboard,
   LoaderCircle,
   LogOut,
+  Menu,
   Plus,
   Settings2,
   ShieldCheck,
   Sparkles,
+  X,
 } from "lucide-react";
 import { ApiError, errorText, request, setCsrf, useRemote } from "./api";
 import type { Catalog, Dashboard, Discovery, Session } from "./types";
 import { Activity } from "./components/Activity";
 import { CaseDetail } from "./components/CaseDetail";
 import { Investigations } from "./components/Investigations";
-import { Memory } from "./components/Memory";
 import { Overview } from "./components/Overview";
 import { ReportForm } from "./components/ReportForm";
 import { Settings } from "./components/Settings";
 import { ErrorNotice, Loading } from "./components/ui";
+import { BrandMark } from "./components/Brand";
+import { readLocation, locationFor, type View } from "./navigation";
+import { useWorkspaceAgentTools } from "./webmcp";
 
-type View = "overview" | "investigations" | "memory" | "activity" | "settings";
+const Memory = lazy(() =>
+  import("./components/Memory").then((module) => ({ default: module.Memory })),
+);
+
 const navigation = [
   { id: "overview", label: "Overview", icon: LayoutDashboard },
   { id: "investigations", label: "Investigations", icon: GitBranch },
@@ -57,17 +64,20 @@ function Login({ authenticated }: { authenticated: (s: Session) => void }) {
     <main className="login-screen">
       <section className="login-story">
         <div className="brand large">
-          <span className="brand-symbol">a</span>arcloom
+          <span className="brand-symbol">
+            <BrandMark />
+          </span>
+          arcloom
           <span className="brand-period">.</span>
         </div>
         <div>
-          <p className="eyebrow">Persistent security intelligence</p>
+          <p className="eyebrow">A workspace for connected investigations</p>
           <h1>
-            Good investigations
+            Every investigation
             <br />
-            should leave
+            leaves a thread.
             <br />
-            something behind.
+            <em>Follow it further.</em>
           </h1>
           <p className="lead">
             Connected findings. Verifiable evidence.
@@ -90,6 +100,12 @@ function Login({ authenticated }: { authenticated: (s: Session) => void }) {
             Discovery
           </span>
         </div>
+        <div className="login-principle">
+          <span className="mono">01 / EVIDENCE FIRST</span>
+          <p>
+            One reviewed finding becomes the next investigator’s starting point.
+          </p>
+        </div>
         <p className="footnote">
           Built around FalkorDB. Restricted to a controlled synthetic lab.
         </p>
@@ -100,7 +116,7 @@ function Login({ authenticated }: { authenticated: (s: Session) => void }) {
             <ShieldCheck size={25} />
           </span>
           <p className="eyebrow">Your investigation workspace</p>
-          <h2>Open Arcloom.</h2>
+          <h2>Welcome to Arcloom.</h2>
           <p className="body-copy">
             Use the access token generated during setup or shared by your
             workspace owner.
@@ -129,8 +145,7 @@ function Login({ authenticated }: { authenticated: (s: Session) => void }) {
             Enter workspace
           </button>
           <p className="footnote">
-            Your token is exchanged for an HttpOnly session. It is not stored in
-            browser local storage.
+            Private by default. Your access token stays out of browser storage.
           </p>
         </form>
       </section>
@@ -145,8 +160,13 @@ function Workspace({
   session: Session;
   signOut: () => void;
 }) {
-  const [view, setView] = useState<View>("overview");
-  const [caseId, setCaseId] = useState<string | null>(null);
+  const [route, setRoute] = useState(() => readLocation());
+  const { view, caseId } = route;
+  const routeState = useRef({
+    location: locationFor(view, caseId),
+    version: 0,
+  });
+  const [menuOpen, setMenuOpen] = useState(false);
   const [revision, setRevision] = useState(0);
   const [showReport, setShowReport] = useState(false);
   const [busy, setBusy] = useState(false);
@@ -154,26 +174,98 @@ function Workspace({
   const d = useRemote<Dashboard>("/api/dashboard", revision, 2500);
   const catalog = useRemote<Catalog>("/api/catalog", 0);
   const canWrite = session.actor.role !== "viewer";
+  const browserToolsAvailable = useWorkspaceAgentTools(session);
   const changed = () => setRevision((v) => v + 1);
-  function openCase(id: string) {
-    setCaseId(id);
-    setView("investigations");
+  function navigate(view: View, caseId: string | null = null) {
+    const next = locationFor(view, caseId);
+    if (routeState.current.location !== next) {
+      routeState.current = {
+        location: next,
+        version: routeState.current.version + 1,
+      };
+    }
+    setRoute({ view, caseId });
+    window.location.hash = next;
+    setMenuOpen(false);
     setNotice(null);
   }
+  function closeMenu() {
+    setMenuOpen(false);
+  }
+  useEffect(() => {
+    document.getElementById("main-content")?.focus({ preventScroll: true });
+    window.scrollTo(0, 0);
+  }, [view, caseId]);
+  useEffect(() => {
+    const sync = () => {
+      const next = readLocation();
+      const location = locationFor(next.view, next.caseId);
+      if (routeState.current.location !== location) {
+        routeState.current = {
+          location,
+          version: routeState.current.version + 1,
+        };
+      }
+      setRoute(next);
+      setMenuOpen(false);
+      setNotice(null);
+    };
+    window.addEventListener("hashchange", sync);
+    return () => window.removeEventListener("hashchange", sync);
+  }, []);
+  useEffect(() => {
+    if (!menuOpen) return;
+    const sidebar = document.getElementById("workspace-navigation");
+    const controls = () => [
+      ...(sidebar?.querySelectorAll<HTMLButtonElement>("button") ?? []),
+    ];
+    const active = sidebar?.querySelector<HTMLButtonElement>(
+      '[aria-current="page"]',
+    );
+    (active ?? controls()[0])?.focus();
+    const escape = (event: KeyboardEvent) => {
+      if (event.key === "Escape") {
+        event.preventDefault();
+        setMenuOpen(false);
+      }
+      if (event.key === "Tab") {
+        const items = controls();
+        const first = items[0];
+        const last = items.at(-1);
+        if (event.shiftKey && document.activeElement === first) {
+          event.preventDefault();
+          last?.focus();
+        } else if (!event.shiftKey && document.activeElement === last) {
+          event.preventDefault();
+          first?.focus();
+        }
+      }
+    };
+    window.addEventListener("keydown", escape);
+    return () => {
+      window.removeEventListener("keydown", escape);
+      document.getElementById("navigation-toggle")?.focus();
+    };
+  }, [menuOpen]);
+  function openCase(id: string) {
+    navigate("investigations", id);
+  }
   async function discover() {
+    const startedOn = routeState.current.version;
     setBusy(true);
     setNotice(null);
     try {
       const r = await request<Discovery>("/api/agents/discover", "POST", {});
       changed();
+      if (startedOn !== routeState.current.version) return;
       if (r.case_id) openCase(r.case_id);
       else
         setNotice(
           r.reason ??
-            "No new candidates. Verify and review a source finding first.",
+            "No eligible follow-ups on this revision. Inspect the handoff briefing for attempted tests and missing prerequisites.",
         );
     } catch (e) {
-      setNotice(errorText(e));
+      if (startedOn === routeState.current.version) setNotice(errorText(e));
     } finally {
       setBusy(false);
     }
@@ -190,26 +282,62 @@ function Workspace({
     (d.data?.counts.awaiting_approval ?? 0) +
     (d.data?.counts.awaiting_review ?? 0);
   return (
-    <div className="app-shell">
-      <a href="#main-content" className="skip-link">
+    <div className={`app-shell ${menuOpen ? "navigation-open" : ""}`}>
+      <a
+        href="#main-content"
+        className="skip-link"
+        onClick={(event) => {
+          event.preventDefault();
+          const main = document.getElementById("main-content");
+          main?.focus();
+          main?.scrollIntoView({ block: "start" });
+        }}
+      >
         Skip to main content
       </a>
-      <aside className="sidebar">
+      {menuOpen && (
+        <button
+          className="navigation-backdrop"
+          tabIndex={-1}
+          aria-label="Close navigation"
+          onClick={closeMenu}
+        />
+      )}
+      <aside
+        className="sidebar"
+        id="workspace-navigation"
+        role={menuOpen ? "dialog" : undefined}
+        aria-modal={menuOpen ? true : undefined}
+        aria-label={menuOpen ? "Workspace navigation" : undefined}
+      >
+        {menuOpen && (
+          <button
+            className="icon-button drawer-close"
+            aria-label="Close navigation"
+            onClick={closeMenu}
+          >
+            <X size={20} />
+          </button>
+        )}
         <button
           className="brand"
           onClick={() => {
-            setView("overview");
-            setCaseId(null);
+            navigate("overview");
           }}
           aria-label="Arcloom overview"
         >
-          <span className="brand-symbol">a</span>arcloom
+          <span className="brand-symbol">
+            <BrandMark />
+          </span>
+          arcloom
           <span className="brand-period">.</span>
         </button>
         <div className="workspace-chip">
-          <span className="workspace-initial">L</span>
+          <span className="workspace-initial">
+            {session.actor.tenant[0]?.toUpperCase()}
+          </span>
           <div>
-            <strong>{session.actor.tenant}</strong>
+            <strong title={session.actor.tenant}>{session.actor.tenant}</strong>
             <small>Security workspace</small>
           </div>
           <span className="badge">LAB</span>
@@ -221,10 +349,10 @@ function Workspace({
               key={n.id}
               className={`nav-item ${view === n.id ? "active" : ""}`}
               aria-current={view === n.id ? "page" : undefined}
+              aria-label={n.label}
+              title={n.label}
               onClick={() => {
-                setView(n.id);
-                setCaseId(null);
-                setNotice(null);
+                navigate(n.id);
               }}
             >
               <n.icon size={17} />
@@ -237,7 +365,7 @@ function Workspace({
         </nav>
         <div className="sidebar-note">
           <ShieldCheck size={18} />
-          <strong>Evidence before certainty.</strong>
+          <strong>Follow the evidence.</strong>
           <p>
             An agent may propose. It cannot authorize a test or confirm its own
             finding.
@@ -257,7 +385,12 @@ function Workspace({
               </small>
             </div>
           </div>
-          <button className="account-button" onClick={() => void logout()}>
+          <button
+            className="account-button"
+            aria-label="Sign out of workspace"
+            title="Sign out of workspace"
+            onClick={() => void logout()}
+          >
             <span className="avatar">
               {session.actor.role[0].toUpperCase()}
             </span>
@@ -269,8 +402,20 @@ function Workspace({
           </button>
         </div>
       </aside>
-      <div className="workspace-main">
+      <div className="workspace-main" inert={menuOpen}>
         <header className="topbar">
+          <button
+            id="navigation-toggle"
+            className="icon-button navigation-toggle"
+            aria-label={
+              menuOpen ? "Close navigation menu" : "Open navigation menu"
+            }
+            aria-expanded={menuOpen}
+            aria-controls="workspace-navigation"
+            onClick={() => setMenuOpen((open) => !open)}
+          >
+            {menuOpen ? <X size={20} /> : <Menu size={20} />}
+          </button>
           <div className="breadcrumbs">
             <span>Workspace</span>
             <span>/</span>
@@ -309,7 +454,7 @@ function Workspace({
           </span>
           <span>Controlled synthetic fixtures · no production targets</span>
         </div>
-        <main id="main-content" className="main-content">
+        <main id="main-content" className="main-content" tabIndex={-1}>
           <ErrorNotice message={d.error || catalog.error || notice} />
           {d.loading && !d.data ? (
             <Loading />
@@ -319,11 +464,19 @@ function Workspace({
                 <Overview
                   dashboard={d.data}
                   revision={revision}
+                  browserToolsAvailable={browserToolsAvailable}
                   openCase={openCase}
                   discover={() => void discover()}
                   busy={
                     busy || !["admin", "reviewer"].includes(session.actor.role)
                   }
+                  canWrite={canWrite}
+                  canDiscover={["admin", "reviewer"].includes(
+                    session.actor.role,
+                  )}
+                  newReport={() => setShowReport(true)}
+                  openMemory={() => navigate("memory")}
+                  openInvestigations={() => navigate("investigations")}
                 />
               )}
               {view === "investigations" &&
@@ -332,7 +485,7 @@ function Workspace({
                     key={caseId}
                     id={caseId}
                     revision={revision}
-                    back={() => setCaseId(null)}
+                    back={() => navigate("investigations")}
                     changed={changed}
                     openCase={openCase}
                     role={session.actor.role}
@@ -342,10 +495,13 @@ function Workspace({
                     revision={revision}
                     openCase={openCase}
                     newReport={() => setShowReport(true)}
+                    canWrite={canWrite}
                   />
                 ))}
               {view === "memory" && (
-                <Memory revision={revision} openCase={openCase} />
+                <Suspense fallback={<Loading />}>
+                  <Memory revision={revision} openCase={openCase} />
+                </Suspense>
               )}
               {view === "activity" && (
                 <Activity revision={revision} openCase={openCase} />
@@ -389,6 +545,15 @@ export default function App() {
     setCsrf(s.csrf);
     setSession(s);
   }
+  useEffect(() => {
+    const expire = () => {
+      setCsrf(null);
+      setSession(null);
+      setError("Your session expired. Enter your workspace token to continue.");
+    };
+    window.addEventListener("arcloom:session-expired", expire);
+    return () => window.removeEventListener("arcloom:session-expired", expire);
+  }, []);
   useEffect(() => {
     const abort = new AbortController();
     void request<Session>("/api/auth/session", "GET", undefined, abort.signal)

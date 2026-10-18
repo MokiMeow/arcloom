@@ -1,0 +1,54 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1440" height="1000" viewBox="0 0 1440 1000" role="img" aria-label="Eligibility: the gateway finding enables internal-route-access, which the invoice test requires; the chain test requires both internal-route-access and cross-tenant-invoice-read">
+<title>Eligibility: the gateway finding enables internal-route-access, which the invoice test requires; the chain test requires both internal-route-access and cross-tenant-invoice-read</title>
+<defs><marker id="a" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="18" markerHeight="18" markerUnits="userSpaceOnUse" orient="auto-start-reverse"><path d="M0 0 L10 5 L0 10z" fill="#1f3029"/></marker><marker id="b" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse"><path d="M0 0 L10 5 L0 10z" fill="#b54b2a"/></marker></defs>
+<rect width="1440" height="1000" fill="#f6f3ec"/>
+<text x="60" y="74" font-family="DM Sans, Segoe UI, Helvetica, Arial, sans-serif" font-size="40" font-weight="700" fill="#1f3029" text-anchor="start">Eligibility needs every prerequisite</text>
+<text x="60" y="114" font-family="DM Sans, Segoe UI, Helvetica, Arial, sans-serif" font-size="25" font-weight="400" fill="#5b6a61" text-anchor="start">Real identifiers from the recorded run. Arrows follow the stored relationship direction.</text>
+<rect x="40" y="150" width="1360" height="330" rx="18" fill="#efebe0"/>
+<text x="70" y="200" font-family="DM Sans, Segoe UI, Helvetica, Arial, sans-serif" font-size="28" font-weight="700" fill="#b54b2a" text-anchor="start">After the gateway finding is confirmed</text>
+<rect x="60" y="240" width="300" height="108" rx="14" fill="#ffffff" stroke="#2f6b55" stroke-width="3"/>
+<text x="78" y="274" font-family="Consolas, SFMono-Regular, Menlo, monospace" font-size="18" font-weight="700" fill="#2f6b55" text-anchor="start">FINDING</text>
+<text x="78" y="310" font-family="DM Sans, Segoe UI, Helvetica, Arial, sans-serif" font-size="24" font-weight="700" fill="#1f3029" text-anchor="start">Gateway trusts</text>
+<text x="78" y="336" font-family="Consolas, SFMono-Regular, Menlo, monospace" font-size="17" font-weight="400" fill="#5b6a61" text-anchor="start">routing context · r1</text>
+<rect x="550" y="240" width="380" height="108" rx="14" fill="#ffffff" stroke="#b54b2a" stroke-width="3"/>
+<text x="568" y="274" font-family="Consolas, SFMono-Regular, Menlo, monospace" font-size="18" font-weight="700" fill="#b54b2a" text-anchor="start">CAPABILITY</text>
+<text x="568" y="310" font-family="Consolas, SFMono-Regular, Menlo, monospace" font-size="21" font-weight="700" fill="#1f3029" text-anchor="start">internal-route-access</text>
+<rect x="1110" y="240" width="270" height="108" rx="14" fill="#ffffff" stroke="#1f3029" stroke-width="3"/>
+<text x="1128" y="274" font-family="Consolas, SFMono-Regular, Menlo, monospace" font-size="18" font-weight="700" fill="#1f3029" text-anchor="start">TESTCASE</text>
+<text x="1128" y="310" font-family="DM Sans, Segoe UI, Helvetica, Arial, sans-serif" font-size="24" font-weight="700" fill="#1f3029" text-anchor="start">Invoice ownership</text>
+<text x="1128" y="336" font-family="Consolas, SFMono-Regular, Menlo, monospace" font-size="17" font-weight="400" fill="#5b6a61" text-anchor="start">invoice-tenant-boundary</text>
+<line x1="360" y1="294" x2="542" y2="294" stroke="#1f3029" stroke-width="3" marker-end="url(#a)"/>
+<text x="455.0" y="270" font-family="Consolas, SFMono-Regular, Menlo, monospace" font-size="22" font-weight="700" fill="#1f3029" text-anchor="middle">ENABLES</text>
+<line x1="1110" y1="294" x2="938" y2="294" stroke="#1f3029" stroke-width="3" marker-end="url(#a)"/>
+<text x="1020.0" y="270" font-family="Consolas, SFMono-Regular, Menlo, monospace" font-size="22" font-weight="700" fill="#1f3029" text-anchor="middle">REQUIRES</text>
+<text x="1245.0" y="384" font-family="Consolas, SFMono-Regular, Menlo, monospace" font-size="19" font-weight="700" fill="#5b6a61" text-anchor="middle">TARGETS invoice-api</text>
+<text x="70" y="450" font-family="DM Sans, Segoe UI, Helvetica, Arial, sans-serif" font-size="25" font-weight="600" fill="#1f3029" text-anchor="start">1 of 1 required capability supported → the invoice test can be proposed.</text>
+<rect x="40" y="510" width="1360" height="440" rx="18" fill="#efebe0"/>
+<text x="70" y="560" font-family="DM Sans, Segoe UI, Helvetica, Arial, sans-serif" font-size="28" font-weight="700" fill="#b54b2a" text-anchor="start">After the invoice finding is also confirmed</text>
+<rect x="60" y="600" width="300" height="108" rx="14" fill="#ffffff" stroke="#2f6b55" stroke-width="3"/>
+<text x="78" y="634" font-family="Consolas, SFMono-Regular, Menlo, monospace" font-size="18" font-weight="700" fill="#2f6b55" text-anchor="start">FINDING</text>
+<text x="78" y="670" font-family="DM Sans, Segoe UI, Helvetica, Arial, sans-serif" font-size="24" font-weight="700" fill="#1f3029" text-anchor="start">Gateway trusts</text>
+<text x="78" y="696" font-family="Consolas, SFMono-Regular, Menlo, monospace" font-size="17" font-weight="400" fill="#5b6a61" text-anchor="start">routing context · r1</text>
+<rect x="60" y="740" width="300" height="108" rx="14" fill="#ffffff" stroke="#2f6b55" stroke-width="3"/>
+<text x="78" y="774" font-family="Consolas, SFMono-Regular, Menlo, monospace" font-size="18" font-weight="700" fill="#2f6b55" text-anchor="start">FINDING</text>
+<text x="78" y="810" font-family="DM Sans, Segoe UI, Helvetica, Arial, sans-serif" font-size="24" font-weight="700" fill="#1f3029" text-anchor="start">Invoice misses</text>
+<text x="78" y="836" font-family="Consolas, SFMono-Regular, Menlo, monospace" font-size="17" font-weight="400" fill="#5b6a61" text-anchor="start">ownership check · r1</text>
+<rect x="550" y="600" width="380" height="108" rx="14" fill="#ffffff" stroke="#b54b2a" stroke-width="3"/>
+<text x="568" y="634" font-family="Consolas, SFMono-Regular, Menlo, monospace" font-size="18" font-weight="700" fill="#b54b2a" text-anchor="start">CAPABILITY</text>
+<text x="568" y="670" font-family="Consolas, SFMono-Regular, Menlo, monospace" font-size="21" font-weight="700" fill="#1f3029" text-anchor="start">internal-route-access</text>
+<rect x="550" y="740" width="380" height="108" rx="14" fill="#ffffff" stroke="#b54b2a" stroke-width="3"/>
+<text x="568" y="774" font-family="Consolas, SFMono-Regular, Menlo, monospace" font-size="18" font-weight="700" fill="#b54b2a" text-anchor="start">CAPABILITY</text>
+<text x="568" y="810" font-family="Consolas, SFMono-Regular, Menlo, monospace" font-size="21" font-weight="700" fill="#1f3029" text-anchor="start">cross-tenant-invoice-read</text>
+<rect x="1110" y="670" width="270" height="108" rx="14" fill="#ffffff" stroke="#1f3029" stroke-width="3"/>
+<text x="1128" y="704" font-family="Consolas, SFMono-Regular, Menlo, monospace" font-size="18" font-weight="700" fill="#1f3029" text-anchor="start">TESTCASE</text>
+<text x="1128" y="740" font-family="DM Sans, Segoe UI, Helvetica, Arial, sans-serif" font-size="24" font-weight="700" fill="#1f3029" text-anchor="start">Gateway → invoice</text>
+<text x="1128" y="766" font-family="Consolas, SFMono-Regular, Menlo, monospace" font-size="17" font-weight="400" fill="#5b6a61" text-anchor="start">invoice-chain</text>
+<line x1="360" y1="654" x2="542" y2="654" stroke="#1f3029" stroke-width="3" marker-end="url(#a)"/>
+<text x="455.0" y="630" font-family="Consolas, SFMono-Regular, Menlo, monospace" font-size="22" font-weight="700" fill="#1f3029" text-anchor="middle">ENABLES</text>
+<line x1="360" y1="794" x2="542" y2="794" stroke="#1f3029" stroke-width="3" marker-end="url(#a)"/>
+<text x="455.0" y="770" font-family="Consolas, SFMono-Regular, Menlo, monospace" font-size="22" font-weight="700" fill="#1f3029" text-anchor="middle">ENABLES</text>
+<line x1="1110" y1="705" x2="938" y2="660" stroke="#1f3029" stroke-width="3" marker-end="url(#a)"/>
+<line x1="1110" y1="742" x2="938" y2="788" stroke="#1f3029" stroke-width="3" marker-end="url(#a)"/>
+<text x="1020.0" y="732" font-family="Consolas, SFMono-Regular, Menlo, monospace" font-size="19" font-weight="700" fill="#1f3029" text-anchor="middle">REQUIRES</text>
+<text x="70" y="910" font-family="DM Sans, Segoe UI, Helvetica, Arial, sans-serif" font-size="25" font-weight="600" fill="#1f3029" text-anchor="start">2 of 2 supported, both current in r1 → the chain test can be proposed.</text>
+</svg>

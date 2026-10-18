@@ -208,3 +208,92 @@ export interface Events {
   cursor: number;
   has_more: boolean;
 }
+export interface ProviderConfiguration {
+  id: string;
+  label: string;
+  model: string;
+  key_configured: boolean;
+  account_id: string | null;
+  profile_id: string | null;
+  connected: boolean;
+}
+export interface ProviderStatus {
+  active_provider: string;
+  providers: ProviderConfiguration[];
+  available_providers: { id: string; label: string }[];
+  chatgpt: {
+    connected: boolean;
+    active_profile_id: string | null;
+    profiles: {
+      id: string;
+      email: string;
+      label: string;
+      connected: boolean;
+    }[];
+    pending: boolean;
+    last_error?: string | null;
+    revocation_confirmed?: boolean | null;
+  };
+}
+export interface ProviderDiagnostic {
+  status: "selected" | "needs_review" | "error";
+  provider: string;
+  model: string;
+  input_tokens: number;
+  output_tokens: number;
+  reason: string;
+  error?: string;
+}
+
+export interface HandoffPacket {
+  schemaVersion: 1;
+  workspace: { tenant: string; revision: string };
+  graph: { engine: "FalkorDB"; in_sync: boolean };
+  audit: { valid: boolean; checked: number; head_hash: string | null };
+  summary: {
+    confirmed_current: number;
+    negative_current: number;
+    inconclusive_current: number;
+    eligible_followups: number;
+  };
+  findings: {
+    id: string;
+    case_id: string;
+    title: string;
+    asset_id: string;
+    revision: string;
+    depth: number;
+    original_researcher?: string;
+    evidence: {
+      artifact_id: string;
+      sha256: string;
+      run_id: string;
+      signature_verified: boolean;
+    };
+    capabilities: string[];
+  }[];
+  candidates: {
+    test_id: string;
+    asset_id: string;
+    title: string;
+    depth: number;
+    requires: string[];
+    finding_ids: string[];
+    paths: Link[][];
+  }[];
+  observations: {
+    case_id: string;
+    test_id: string;
+    title: string;
+    state: string;
+    outcome: string | null;
+    revision: string;
+  }[];
+  blocked: {
+    test_id: string;
+    title: string;
+    reason: string;
+    missing_capabilities: string[];
+  }[];
+  packet_sha256: string;
+}

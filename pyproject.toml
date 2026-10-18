@@ -17,6 +17,8 @@ dependencies = [
   "pydantic-settings==2.16.0",
   "httpx==0.28.1",
   "FalkorDB==1.8.0",
+  "pyjwt[crypto]==2.15.1",
+  "mcp==2.3.0",
 ]
 
 [project.optional-dependencies]
@@ -30,6 +32,7 @@ dev = [
 
 [project.scripts]
 arcloom = "arcloom.cli:main"
+arcloom-mcp = "arcloom.mcp_server:main"
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]

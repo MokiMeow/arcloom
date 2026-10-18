@@ -59,99 +59,111 @@ export function GraphInsights({
   }
   return (
     <section
-      className="panel padded stack"
+      className="panel padded stack graph-insights"
       aria-label="Graph intelligence tools"
     >
-      <div>
+      <header>
         <p className="eyebrow">FalkorDB / Inspect and challenge the memory</p>
-        <h2>What stops being supported when a finding is withdrawn?</h2>
-      </div>
+        <h2>Inspect the evidence. Challenge its support.</h2>
+        <p className="muted">
+          Search real graph records, then see which prerequisites depend on a
+          finding.
+        </p>
+      </header>
       <ErrorNotice message={error} />
-      <form
-        className="stack"
-        onSubmit={(e) => {
-          e.preventDefault();
-          void perform(async () => {
-            setFound(
-              await request<Search>(
-                `/api/memory/search?q=${encodeURIComponent(text)}`,
-              ),
-            );
-          });
-        }}
-      >
-        <label>
-          Search persisted graph memory
-          <input
-            aria-label="Search graph memory"
-            value={text}
-            maxLength={100}
-            onChange={(e) => setText(e.target.value)}
-            placeholder="invoice"
-            required
-          />
-        </label>
-        <button className="button" disabled={busy}>
-          Search graph
-        </button>
-      </form>
-      {found && (
-        <div className="stack" aria-live="polite">
-          <span className="muted">
-            {found.items.length} indexed matches
-            {found.truncated ? " · more matches omitted" : ""}. Relevance is not
-            proof.
-          </span>
-          {found.items.map((n) => (
-            <button
-              type="button"
-              key={n.id}
-              className="text-button"
-              onClick={() => selectNode(n)}
-            >
-              {String(n.props.title ?? n.id)} · {n.kind}
-            </button>
-          ))}
-        </div>
+      {busy && (
+        <p className="muted" role="status">
+          Querying graph memory…
+        </p>
       )}
-      <div className="stack">
-        <label>
-          Finding to withdraw
-          <select
-            aria-label="Finding to withdraw"
-            value={root}
-            onChange={(e) => {
-              setRoot(e.target.value);
-              setAnalysis(null);
-            }}
-          >
-            <option value="">Choose a current finding</option>
-            {findings.map((n) => (
-              <option key={n.id} value={n.id}>
-                {String(n.props.title ?? n.id)}
-              </option>
-            ))}
-          </select>
-        </label>
-        <button
-          className="button"
-          disabled={busy || !root}
-          onClick={() =>
+      <div className="insight-grid">
+        <form
+          className="stack insight-tool"
+          onSubmit={(e) => {
+            e.preventDefault();
             void perform(async () => {
-              setAnalysis(
-                await request<Withdrawal>(
-                  `/api/memory/withdrawal?finding_id=${encodeURIComponent(root)}`,
+              setFound(
+                await request<Search>(
+                  `/api/memory/search?q=${encodeURIComponent(text)}`,
                 ),
               );
-            })
-          }
+            });
+          }}
         >
-          Run withdrawal analysis
-        </button>
-        <p className="muted">
-          Read-only experiment. No graph nodes are deleted and no tests are
-          executed.
-        </p>
+          <label>
+            Search persisted graph memory
+            <input
+              aria-label="Search graph memory"
+              value={text}
+              maxLength={100}
+              onChange={(e) => setText(e.target.value)}
+              placeholder="invoice"
+              required
+            />
+          </label>
+          <button className="button" disabled={busy}>
+            Search graph
+          </button>
+          {found && (
+            <div className="stack" aria-live="polite">
+              <span className="muted">
+                {found.items.length} indexed matches
+                {found.truncated ? " · more matches omitted" : ""}. Relevance is
+                not proof.
+              </span>
+              {found.items.map((n) => (
+                <button
+                  type="button"
+                  key={n.id}
+                  className="text-button"
+                  onClick={() => selectNode(n)}
+                >
+                  {String(n.props.title ?? n.id)} · {n.kind}
+                </button>
+              ))}
+            </div>
+          )}
+        </form>
+        <div className="stack insight-tool">
+          <label>
+            Finding to withdraw
+            <select
+              aria-label="Finding to withdraw"
+              disabled={busy}
+              value={root}
+              onChange={(e) => {
+                setRoot(e.target.value);
+                setAnalysis(null);
+              }}
+            >
+              <option value="">Choose a current finding</option>
+              {findings.map((n) => (
+                <option key={n.id} value={n.id}>
+                  {String(n.props.title ?? n.id)}
+                </option>
+              ))}
+            </select>
+          </label>
+          <button
+            className="button"
+            disabled={busy || !root}
+            onClick={() =>
+              void perform(async () => {
+                setAnalysis(
+                  await request<Withdrawal>(
+                    `/api/memory/withdrawal?finding_id=${encodeURIComponent(root)}`,
+                  ),
+                );
+              })
+            }
+          >
+            Run withdrawal analysis
+          </button>
+          <p className="muted">
+            Read-only experiment. No graph nodes are deleted and no tests are
+            executed.
+          </p>
+        </div>
       </div>
       {analysis && (
         <div className="stack" aria-live="polite">

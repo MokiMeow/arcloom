@@ -16,10 +16,12 @@ export function Investigations({
   revision,
   openCase,
   newReport,
+  canWrite,
 }: {
   revision: number;
   openCase: (id: string) => void;
   newReport: () => void;
+  canWrite: boolean;
 }) {
   const [search, setSearch] = useState("");
   const [state, setState] = useState("");
@@ -41,10 +43,12 @@ export function Investigations({
         tag="Investigation inbox"
         title="One case. Every decision."
         action={
-          <button className="button primary" onClick={newReport}>
-            <Plus size={16} />
-            Submit report
-          </button>
+          canWrite && (
+            <button className="button primary" onClick={newReport}>
+              <Plus size={16} />
+              Submit report
+            </button>
+          )
         }
       >
         Reported issues, agent hypotheses, and negative results stay distinct
@@ -141,7 +145,9 @@ export function Investigations({
           </div>
         ) : (
           <Empty title="No matching investigations">
-            Create a report or clear your filters.
+            {canWrite
+              ? "Create a report or clear your filters."
+              : "Clear your filters or ask a researcher to submit a report."}
           </Empty>
         )}
       </div>

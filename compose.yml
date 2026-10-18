@@ -63,7 +63,7 @@ services:
       timeout: 4s
       retries: 8
   graph:
-    image: falkordb/falkordb:v6.0.2
+    image: falkordb/falkordb:v4.22.1@sha256:b0bdcac2cbaff989e77cb0610439b7a9289e86de033ccbbd4368b66fb680ae7a
     environment:
       REDIS_ARGS: "--requirepass ${ARCLOOM_GRAPH_PASSWORD:?Generate credentials first} --appendonly yes --appendfsync everysec"
       REDISCLI_AUTH: ${ARCLOOM_GRAPH_PASSWORD:?Generate credentials first}

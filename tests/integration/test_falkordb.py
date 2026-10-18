@@ -29,6 +29,7 @@ def real_runtime(tmp_path):
         data_dir=tmp_path,
         graph_mode=os.environ.get("ARCLOOM_TEST_GRAPH", "lite"),
         graph_host=os.environ.get("ARCLOOM_TEST_GRAPH_HOST", "127.0.0.1"),
+        graph_port=int(os.environ.get("ARCLOOM_TEST_GRAPH_PORT", "6379")),
         graph_password=os.environ.get("ARCLOOM_TEST_GRAPH_PASSWORD", ""),
         tenant=new_id("test"),
         admin_token=ADMIN,

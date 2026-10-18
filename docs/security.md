@@ -1,30 +1,38 @@
 # Security model
 
-The permitted target is the reviewed synthetic fixture catalog. No endpoint accepts an arbitrary scan URL, command, shell program, uploaded executable or production credential. Deliberately vulnerable fixture routes are exercised through an ASGI transport inside the runner process and are not mounted on its HTTP server.
+Arcloom executes a reviewed synthetic fixture catalog. No endpoint accepts an arbitrary scan URL, command, shell program, uploaded executable or production credential. Vulnerable fixture routes run through ASGI transport inside the authenticated runner and are not mounted on its public HTTP surface.
 
-## Controls implemented and tested
+[Documentation index](index.md) · [Architecture](architecture.md) · [Operations](operations.md)
 
-- Workspace-bound roles and high-entropy access tokens, stored only as hashes.
-- HttpOnly, SameSite=Strict browser sessions; CSRF validation and exact-origin checks on mutations.
+## Controls
+
+- Workspace-bound roles and high-entropy access tokens stored as hashes.
+- HttpOnly, SameSite=Strict browser sessions, CSRF validation and exact-origin mutation checks.
 - Session expiry, token-rotation invalidation, member revocation and execution-time reviewer rechecks.
-- Fixed Cypher templates and allowlisted labels/relationships; tenant-derived graph names.
+- Fixed Cypher templates, allowlisted labels/relationships and workspace-derived graph names.
 - Registered test/asset pairing, revision and scope expiry, approval timeout, budgets and depth limits.
-- Signed runner receipts matched against run/case/tenant/test/revision/asset; strict bounds on upstream responses.
-- Content-addressed artifacts, immutable-by-API writes, hash verification, symlink/traversal rejection.
-- Idempotent request keys, transactional budget reservations, execution fencing and manual retries after uncertain outcomes.
-- No raw reports or execution credentials in model context. Invalid tools, invented evidence and arbitrary fields are rejected.
-- No credentials or raw request bodies in ordinary HTTP logs; input values are removed from validation errors.
+- Signed runner receipts matched to run/case/workspace/test/revision/asset and bounded upstream responses.
+- Content-addressed artifacts, immutable-by-API writes, hash verification and symlink/path traversal rejection.
+- Idempotency, transactional budget reservations, execution fencing and explicit retries after uncertain outcomes.
+- Bounded model context without raw reports or execution credentials; invented evidence, invalid tools and unexpected fields are rejected.
+- Ordinary HTTP logs exclude credentials and raw request bodies; validation errors omit input values.
 
-## Boundaries and remaining work
+[Testing](testing.md) identifies the exercised paths and their limits. These controls support a bounded demonstration; they do not establish a production security certification.
 
-This is not a sandbox for executing untrusted generated code. The container isolation and internal network strengthen separation of the reviewed lab; they are not a license to add arbitrary exploitation tools. A real enterprise integration requires a new authorization model, signed asset inventory, egress enforcement, scoped credentials, safe test definitions and explicit assessment approval.
+## Trust boundaries
 
-The app and lab runner share a signing secret. HMAC receipts establish integrity relative to that trusted runner, not independent forensic attestation. Rotating the runner key requires a versioned historical-key design before old receipts can be revalidated; that key-ring workflow is not implemented. Protect the journal, graph volume, artifacts and secrets together.
+The application and lab runner share a signing secret. HMAC receipts establish integrity relative to that trusted runner, rather than independent forensic attestation. Protect host access, configuration and data together. Before rotating the signing key, design historical-key lookup so earlier receipts remain verifiable.
 
-A hash-chained audit log cannot prevent a host administrator from replacing the complete chain. Export and independently anchor the head hash. There is no KMS integration, external immutable audit sink, penetration-test certification, production load guarantee or managed backup/restore service.
+A local hash chain detects inconsistent audit history relative to a trusted head. A host administrator able to replace the complete history can replace that chain as well. Export and independently anchor its head when you need protection against wholesale replacement.
 
-The default localhost session cookie is not Secure because development uses HTTP. Public deployment requires HTTPS, `ARCLOOM_COOKIE_SECURE=true`, exact allowed hosts/origins and a reviewed reverse proxy. Do not expose the development instance, graph port or runner port publicly. Docker app and lab run without root/capabilities; the vendor graph image has its own entrypoint and should not be assumed non-root.
+The container network separates the reviewed lab; it is not a sandbox contract for arbitrary generated exploitation code. A broader enterprise integration needs signed asset inventory, per-target authorization, approved safe tests, egress enforcement, scoped credentials and explicit assessment approval. [Product direction](agent-expansion.md) describes a bounded extension.
 
-## Reporting a problem
+## Deployment requirements
 
-Use a private issue or contact the repository owner. Do not paste `.env`, real secrets or customer records. Describe the minimal synthetic reproduction and affected revision. Test-only fixtures and credentials are explicitly labelled and never intended for deployment.
+Local development uses HTTP, so its session cookie is not Secure. A public deployment requires HTTPS, `ARCLOOM_COOKIE_SECURE=true`, exact hosts/origins and a reviewed reverse proxy. Keep graph and runner ports private. The Compose app and lab run without root/capabilities; the vendor graph image has its own entrypoint and should not be assumed non-root.
+
+Use encrypted durable graph hosting for sensitive records. A plaintext Cloud Free instance is for disposable synthetic evaluation. Coordinate journal, graph, evidence and protected signing configuration in backups, and verify restoration before depending on a deployment. [Operations](operations.md) and [graph hosting](cloud-hosting.md) provide the procedure.
+
+## Report an application issue
+
+Contact the repository owner privately with a minimal synthetic reproduction and the affected revision. Exclude `.env`, tokens, customer records and private evidence. Test fixtures and public test credentials are labelled for disposable testing and must never be deployed.

@@ -13,7 +13,7 @@ from pydantic import ValidationError
 
 from arcloom.config import Settings
 from arcloom.domain import Candidate, DomainError, Selection
-from arcloom.http_boundary import bounded_json
+from arcloom.http_boundary import DeadlineTransport, bounded_json
 from arcloom.storage import canonical
 
 SYSTEM = """You are Arcloom's investigation planner for an authorized synthetic security lab.
@@ -71,6 +71,44 @@ class DeterministicPlanner:
         return PlanResult(selection)
 
 
+def gemini_response(result: dict) -> tuple[list[dict], dict]:
+    """Validate the native envelope before using its single proposed function call."""
+    feedback = result.get("promptFeedback", {})
+    if not isinstance(feedback, dict) or feedback.get("blockReason"):
+        raise ValueError("The model blocked this request")
+    candidates = result.get("candidates")
+    if (
+        not isinstance(candidates, list)
+        or len(candidates) != 1
+        or not isinstance(candidates[0], dict)
+    ):
+        raise ValueError("Expected exactly one model candidate")
+    candidate = candidates[0]
+    if candidate.get("finishReason") != "STOP":
+        raise ValueError("Expected a completed model candidate")
+    content = candidate.get("content")
+    if not isinstance(content, dict):
+        raise ValueError("Expected model content")
+    parts = content.get("parts")
+    if not isinstance(parts, list) or any(not isinstance(part, dict) for part in parts):
+        raise ValueError("Expected content parts")
+    calls = [part["functionCall"] for part in parts if "functionCall" in part]
+    if len(calls) != 1 or not isinstance(calls[0], dict):
+        raise ValueError("Expected exactly one function call")
+    call = calls[0]
+    usage = result.get("usageMetadata", {})
+    if not isinstance(usage, dict):
+        raise ValueError("Expected usage metadata")
+    fields = ("promptTokenCount", "candidatesTokenCount", "thoughtsTokenCount", "totalTokenCount")
+    counts = [usage.get(field, 0) for field in fields]
+    if any(type(count) is not int or not 0 <= count <= 10_000_000 for count in counts):
+        raise ValueError("Invalid reported token usage")
+    return (
+        [{"type": "tool_use", "name": call.get("name"), "input": call.get("args")}],
+        {"input_tokens": counts[0], "output_tokens": counts[1] + counts[2]},
+    )
+
+
 class ModelPlanner:
     def __init__(self, settings: Settings, transport: httpx.BaseTransport | None = None):
         self.settings, self.transport = settings, transport
@@ -78,8 +116,9 @@ class ModelPlanner:
     def select(self, candidates: list[Candidate]) -> PlanResult:
         if not candidates:
             raise DomainError("no_candidates", "No eligible candidates remain", 409)
+        candidates = candidates[:10]
         data = canonical(
-            {"candidates": [c.public() for c in candidates[:10]], "previous_conversation": []}
+            {"candidates": [c.public() for c in candidates], "previous_conversation": []}
         )
         if len(data.encode()) > 24000:
             raise DomainError(
@@ -131,13 +170,44 @@ class ModelPlanner:
                     "disable_parallel_tool_use": True,
                 },
             }
+        elif self.settings.provider == "gemini":
+            url = f"https://generativelanguage.googleapis.com/v1beta/models/{self.settings.model}:generateContent"
+            headers = {"x-goog-api-key": key}
+            body = {
+                "systemInstruction": {"parts": [{"text": SYSTEM}]},
+                "contents": [{"role": "user", "parts": [{"text": data}]}],
+                "generationConfig": {"maxOutputTokens": 700, "candidateCount": 1},
+                "tools": [
+                    {
+                        "functionDeclarations": [
+                            {
+                                "name": TOOL_NAME,
+                                "description": TOOL_DESCRIPTION,
+                                "parametersJsonSchema": schema,
+                            }
+                        ]
+                    }
+                ],
+                "toolConfig": {
+                    "functionCallingConfig": {
+                        "mode": "ANY",
+                        "allowedFunctionNames": [TOOL_NAME],
+                    }
+                },
+            }
         else:
             raise DomainError("invalid_provider", "No remote model provider is configured", 503)
         try:
             with httpx.Client(
                 timeout=self.settings.model_timeout_seconds,
                 follow_redirects=False,
-                transport=self.transport,
+                transport=self.transport
+                if self.transport is not None
+                else DeadlineTransport(
+                    self.settings.model_timeout_seconds,
+                    error_prefix="model",
+                    deadline=self.settings._model_deadline,
+                ),
                 trust_env=False,
             ) as client:
                 result = bounded_json(
@@ -148,22 +218,38 @@ class ModelPlanner:
                     seconds=self.settings.model_timeout_seconds,
                     error_prefix="model",
                 )
+            if self.settings.provider == "gemini":
+                blocks, usage = gemini_response(result)
+                call_type = "tool_use"
+            elif self.settings.provider == "openai":
+                blocks = result.get("output", [])
+                call_type = "function_call"
+                usage = result.get("usage", {})
+            else:
+                blocks = result.get("content", [])
+                call_type = "tool_use"
+                usage = result.get("usage", {})
+            if not isinstance(blocks, list) or any(not isinstance(c, dict) for c in blocks):
+                raise ValueError("Expected a list of response objects")
+            calls = [c for c in blocks if c.get("type") == call_type]
             if self.settings.provider == "openai":
-                calls = [c for c in result.get("output", []) if c.get("type") == "function_call"]
                 if len(calls) != 1 or calls[0].get("name") != TOOL_NAME:
                     raise ValueError("Expected exactly one named tool call")
                 selection = Selection.model_validate_json(calls[0]["arguments"])
             else:
-                calls = [c for c in result.get("content", []) if c.get("type") == "tool_use"]
                 if len(calls) != 1 or calls[0].get("name") != TOOL_NAME:
                     raise ValueError("Expected exactly one named tool call")
                 selection = Selection.model_validate(calls[0]["input"])
             check_selection(selection, candidates)
-            usage = result.get("usage", {})
+            if not isinstance(usage, dict):
+                raise ValueError("Expected a usage object")
+            counts = [usage.get("input_tokens", 0), usage.get("output_tokens", 0)]
+            if any(type(count) is not int or not 0 <= count <= 10_000_000 for count in counts):
+                raise ValueError("Invalid reported token usage")
             return PlanResult(
                 selection,
-                max(0, int(usage.get("input_tokens", 0))),
-                max(0, int(usage.get("output_tokens", 0))),
+                counts[0],
+                counts[1],
             )
         except (httpx.HTTPError, ValidationError, ValueError, TypeError, KeyError) as exc:
             raise DomainError(

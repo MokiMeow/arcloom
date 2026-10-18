@@ -4,10 +4,14 @@ import {
   Database,
   Fingerprint,
   GitBranch,
+  CircleCheck,
+  FilePlus2,
+  ShieldCheck,
   Sparkles,
 } from "lucide-react";
 import type { Dashboard, CasePage, Agent } from "../types";
 import { useRemote } from "../api";
+import { HandoffBrief } from "./HandoffBrief";
 import {
   Empty,
   ErrorNotice,
@@ -23,12 +27,24 @@ export function Overview({
   openCase,
   discover,
   busy,
+  canWrite,
+  canDiscover,
+  newReport,
+  openMemory,
+  openInvestigations,
+  browserToolsAvailable = false,
 }: {
   dashboard: Dashboard;
   revision: number;
   openCase: (id: string) => void;
   discover: () => void;
   busy: boolean;
+  canWrite: boolean;
+  canDiscover: boolean;
+  newReport: () => void;
+  openMemory: () => void;
+  openInvestigations: () => void;
+  browserToolsAvailable?: boolean;
 }) {
   const cases = useRemote<CasePage>(
     "/api/investigations?limit=5",
@@ -40,23 +56,56 @@ export function Overview({
     revision,
     5000,
   );
+  const decisions =
+    (d.counts.awaiting_approval ?? 0) + (d.counts.awaiting_review ?? 0);
+  const hasReports = Object.values(d.counts).some((count) => count > 0);
+  const nextAction =
+    decisions > 0 ? "review" : !hasReports ? "report" : "discover";
+  const discoveryBlocked = !canDiscover
+    ? "A reviewer or owner can start an investigator."
+    : !hasReports
+      ? "Submit the first report before starting a fresh investigator."
+      : !d.memory.in_sync
+        ? "Graph memory must be synchronized first."
+        : !d.scope_enabled
+          ? "Execution admission is paused."
+          : busy
+            ? "An investigator is already running."
+            : undefined;
   return (
     <>
+      <div className="overview-dateline">
+        <span className="eyebrow">Your investigation workspace</span>
+        <span className="mono">
+          {new Date(d.at * 1000).toLocaleDateString(undefined, {
+            day: "numeric",
+            month: "long",
+            year: "numeric",
+          })}
+        </span>
+      </div>
       <SectionHead
         tag="Security intelligence / Overview"
-        title="The session ends. The knowledge stays."
+        title="Investigation overview"
         action={
           <button
             className="button primary"
             onClick={discover}
-            disabled={busy || !d.memory.in_sync || !d.scope_enabled}
+            disabled={
+              !canDiscover ||
+              busy ||
+              !hasReports ||
+              !d.memory.in_sync ||
+              !d.scope_enabled
+            }
+            title={discoveryBlocked}
           >
             <Sparkles size={16} />
             Start fresh investigator
           </button>
         }
       >
-        Connected evidence gives the next investigator a better starting point.
+        The session ends. The knowledge stays. Pick up the next thread.
       </SectionHead>
       <div className="stats-grid">
         <div className="stat">
@@ -65,7 +114,7 @@ export function Overview({
             <Fingerprint size={16} />
           </span>
           <strong>{String(d.verified_current).padStart(2, "0")}</strong>
-          <small>{d.verified_historical} historical receipts preserved</small>
+          <small>{d.verified_historical} total findings retained</small>
         </div>
         <div className="stat">
           <span>
@@ -100,39 +149,60 @@ export function Overview({
           <small>Bounded per deployment revision</small>
         </div>
       </div>
-      <div className="loop-banner">
-        <div className="loop-intro">
-          <p className="eyebrow">The continuing investigation loop</p>
-          <h2>Evidence is the handoff.</h2>
+      <HandoffBrief
+        key={d.revision}
+        revision={revision}
+        openCase={openCase}
+        openMemory={openMemory}
+        browserToolsAvailable={browserToolsAvailable}
+      />
+      <section className="next-action" aria-label="Next workspace action">
+        <span className="next-action-icon">
+          {nextAction === "review" ? (
+            <ShieldCheck size={24} />
+          ) : nextAction === "report" ? (
+            <FilePlus2 size={24} />
+          ) : (
+            <CircleCheck size={24} />
+          )}
+        </span>
+        <div>
+          <span className="eyebrow">
+            {nextAction === "review" ? "Your attention is needed" : "Next step"}
+          </span>
+          <h2>
+            {nextAction === "review"
+              ? `${decisions} ${decisions === 1 ? "decision is" : "decisions are"} waiting for a human.`
+              : nextAction === "report"
+                ? "Build your first evidence trail."
+                : "Continue from what you know."}
+          </h2>
           <p>
-            A graph path proposes a question.
-            <br />
-            An authorized test provides an observation.
+            {nextAction === "review"
+              ? "Inspect the scope or recorded evidence before moving an investigation forward."
+              : nextAction === "report"
+                ? canWrite
+                  ? "Start with an observation from the registered lab. Verification comes next."
+                  : "Ask a researcher to submit the first lab observation. You can follow every decision here."
+                : "Open the memory graph to inspect the supporting paths, or start a fresh investigator."}
           </p>
         </div>
-        <div className="loop-steps">
-          {["Report", "Verify", "Remember", "Discover"].map((step, i) => (
-            <div
-              className={i === 2 ? "loop-step selected" : "loop-step"}
-              key={step}
-            >
-              <span>0{i + 1}</span>
-              <strong>{step}</strong>
-              <small>
-                {
-                  [
-                    "Researcher attribution",
-                    "Test + human review",
-                    "FalkorDB relationships",
-                    "Fresh agent context",
-                  ][i]
-                }
-              </small>
-              {i < 3 && <ArrowRight className="step-arrow" size={15} />}
-            </div>
-          ))}
-        </div>
-      </div>
+        {nextAction === "review" ? (
+          <button className="button primary" onClick={openInvestigations}>
+            Open decision queue <ArrowRight size={15} />
+          </button>
+        ) : nextAction === "report" ? (
+          canWrite && (
+            <button className="button primary" onClick={newReport}>
+              Submit first report <ArrowRight size={15} />
+            </button>
+          )
+        ) : (
+          <button className="button" onClick={openMemory}>
+            Inspect memory <ArrowRight size={15} />
+          </button>
+        )}
+      </section>
       {!d.memory.in_sync && (
         <ErrorNotice
           message={`Graph memory ${d.memory.available ? "has pending writes" : "is unavailable"}. Discovery and test admission fail closed. Pending events: ${d.memory.pending_events}.`}
@@ -142,7 +212,9 @@ export function Overview({
         <section className="panel">
           <header className="panel-head">
             <h2>Latest investigations</h2>
-            <span className="muted">Live journal</span>
+            <button className="text-button" onClick={openInvestigations}>
+              View all <ArrowUpRight size={14} />
+            </button>
           </header>
           <ErrorNotice message={cases.error} />
           {cases.loading && !cases.data ? (
@@ -189,7 +261,9 @@ export function Overview({
             </span>
           </header>
           <ErrorNotice message={agents.error} />
-          {agents.data?.items.length ? (
+          {agents.loading && !agents.data ? (
+            <Loading />
+          ) : agents.data?.items.length ? (
             <div className="timeline">
               {agents.data.items.map((a) => (
                 <div className="timeline-item" key={a.id}>
@@ -217,8 +291,9 @@ export function Overview({
             </div>
           ) : (
             <Empty title="Ready for a fresh investigator">
-              Verify and review the first finding. Then start a new agent with
-              only graph-retrieved context.
+              {d.verified_current > 0
+                ? "Start a fresh investigator with the current graph's supported follow-ups. No previous conversation is carried."
+                : "Verify and review the first finding. Then start a new agent with only graph-retrieved context."}
             </Empty>
           )}
         </section>

@@ -70,6 +70,9 @@ class GraphIntelligence:
 
     def search(self, tenant: str, text: str) -> dict:
         query = search_terms(text)
+        # Startup tolerates a temporarily unavailable graph. Retry index setup
+        # after recovery rather than leaving search broken until a restart.
+        self.prepare(tenant)
         rows = self.graph._query(tenant, SEARCH, {"query": query}, readonly=True)
         return {
             "engine": "FalkorDB full-text index",

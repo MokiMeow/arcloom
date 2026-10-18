@@ -1,5 +1,9 @@
 # Architecture and invariants
 
+Arcloom separates proposing an investigation, authorizing execution, observing a result and accepting evidence. FalkorDB is the shared reasoning memory; SQLite is the transactional workflow journal; immutable-by-API receipt files hold execution evidence.
+
+[Documentation index](index.md) · [Security model](security.md) · [Graph tools](graph-intelligence.md)
+
 ## Data flow
 
 ```mermaid
@@ -21,19 +25,36 @@ flowchart LR
 
 ## Responsibilities
 
-`api.py` authenticates, validates, bounds requests, checks CSRF/origin and routes typed operations. `workflow.py` owns case transitions. `worker.py` claims durable execution jobs with fencing tokens. `discovery.py` constructs a new planner context on every step. `graph.py` owns fixed parameterized Cypher and ordered projections. `lab.py` owns the only executable test catalog and synthetic fixture application. `evidence.py` verifies bytes and signatures. `storage.py` provides atomic transactions and audit records.
+| Component | Responsibility |
+| --- | --- |
+| [api.py](../src/arcloom/api.py) | Authentication, bounded typed requests, CSRF/origin checks and operation routing |
+| [workflow.py](../src/arcloom/workflow.py) | Case transitions, approval, review and revision rules |
+| [worker.py](../src/arcloom/worker.py) | Durable jobs and execution fencing |
+| [discovery.py](../src/arcloom/discovery.py) | A new planner context for each investigation step |
+| [graph.py](../src/arcloom/graph.py) | Fixed parameterized Cypher and ordered graph projections |
+| [lab.py](../src/arcloom/lab.py) | Executable test catalog and synthetic fixtures |
+| [evidence.py](../src/arcloom/evidence.py) | Artifact and signature verification |
+| [storage.py](../src/arcloom/storage.py) | Atomic journal transactions and audit records |
 
-An LLM can select one candidate already returned by the graph. It cannot submit a URL, write raw Cypher, broaden scope, choose a shell command, approve itself, or promote its own answer to a finding. The deterministic planner uses the same candidate contract without claiming a model call.
+A model selects one candidate returned by the graph. It cannot supply an arbitrary URL, raw Cypher or shell command, broaden scope, approve itself or promote its answer to a finding. The deterministic planner uses the same candidate contract without making a model call.
 
-## Memory model
+## Memory schema and selection
 
-Nodes include Report, Hypothesis, Finding, Capability, TestCase, Asset, TestRun, Evidence, Review, Revision and AgentSession. Findings ENABLE capabilities; TestCases REQUIRE them and TARGET assets. Runs BACK evidence. Hypotheses and later findings retain DERIVED_FROM links to earlier findings.
+Node labels include `Report`, `Hypothesis`, `Finding`, `Capability`, `TestCase`, `Asset`, `TestRun`, `Evidence`, `Review`, `Revision`, `AgentSession` and `TrustBoundary`. All use an `Entity` identity label. Workspace-derived graph names isolate projections.
 
-Candidate eligibility requires all prerequisite capabilities to be supported by current, confirmed findings in the active revision. A previous attempt at that revision suppresses duplicate discovery. Graph results are cross-checked against the trusted test catalog, persisted findings, evidence hashes, revision and depth limit before a case is created.
+```text
+(Finding)-[:ENABLES]->(Capability)<-[:REQUIRES]-(TestCase)-[:TARGETS]->(Asset)
+(Finding)-[:BACKED_BY]->(TestRun)-[:BACKED_BY]->(Evidence)
+(Hypothesis)-[:PRODUCED]->(TestRun)-[:EXECUTED]->(TestCase)
+(Finding)-[:DERIVED_FROM]->(Finding)
+(Hypothesis)-[:DERIVED_FROM]->(Finding)
+```
 
-The graph's stored edges are essential to selecting follow-ups. An outage does not trigger an alternate SQLite or in-memory reasoning engine. Explicit graph doubles exist only in test code.
+Candidate selection requires every prerequisite capability to have current confirmed support in the active revision. A previous attempt at that revision suppresses duplicate discovery. The [essential query in the README](../README.md#why-falkordb) illustrates the all-prerequisite check; [FOLLOWUPS_CYPHER](../src/arcloom/graph.py) is the complete executable query, including source filtering, attempts and supporting paths.
 
-## State machine
+Graph candidates are checked against the trusted catalog, persisted findings, evidence hashes, revision and depth limits before a case is created. Graph outages block discovery and new test admission; there is no alternate SQLite reasoning engine. Test doubles are explicitly injected by unit tests.
+
+## State transitions
 
 ```text
 report / graph candidate
@@ -47,22 +68,22 @@ inconclusive -> explicit retry request -> awaiting_approval
 historical finding -> explicit revalidation -> new revision-scoped case
 ```
 
-Observation is not review. `reproduced` is a runner outcome; `confirmed` requires review acceptance. The old finding remains historically confirmed after a patch, while `current=false` prevents its use as an active prerequisite. An inaccessible prerequisite yields uncertainty about a downstream flaw, not a fabricated claim that the downstream flaw was fixed.
+`reproduced` is an observation; `confirmed` requires review acceptance. A patched revision preserves the old finding's historical confirmation while `current=false` excludes it from active prerequisites. An inaccessible prerequisite creates uncertainty about a downstream flaw rather than evidence that the flaw is fixed.
 
-## Consistency and crash behavior
+## Consistency and recovery
 
-Journal writes, budget reservations, case transitions, audit records and outbox entries commit together. The projector applies ordered, parameterized MERGEs. Retrying a projection does not duplicate graph entities. Discovery waits for its workspace outbox to synchronize.
+Journal writes, budget reservations, case transitions, audit records and outbox entries commit together. The projector applies ordered parameterized `MERGE` operations. Replaying a projection does not duplicate its entities. Discovery waits for the workspace outbox to synchronize.
 
-Jobs use a durable lease and fencing token. A process that returns after losing its fence cannot commit a successful result. An expired running job becomes inconclusive; it is not automatically executed again. A reviewer may request a new attempt, up to the configured limit. This deliberately avoids promising exactly-once execution over an unreliable boundary.
+Durable execution leases carry fencing tokens. A process that returns after losing its fence cannot commit success. An expired running job becomes inconclusive and requires a newly approved attempt; this avoids promising exactly-once execution across an unreliable boundary.
 
-Admission rechecks scope, assessment expiry, revision, supporting findings, approval expiry, reviewer access and remaining budget. A scope pause blocks new admission; a bounded read-only test already admitted may finish. Revisions cannot advance while jobs are queued or running.
+Admission rechecks scope, assessment expiry, revision, supporting findings, approval expiry, reviewer access and budget. Pausing scope blocks new admission; an already-admitted bounded read-only test may finish. Revisions cannot advance while jobs are queued or running.
 
 ## Fresh context and bounded work
 
-Each discovery constructs a new planner without prior messages. A dedicated integration test terminates process A, starts process B with a different PID, and confirms that the new process selects the invoice follow-up from persisted FalkorDB records. Conversation persistence is not used to manufacture this handoff.
+Each discovery constructs a planner without prior messages. The process integration test terminates one process and starts another with a distinct PID; the second selects the invoice follow-up from persisted FalkorDB records. Conversation persistence is not needed for that handoff.
 
-One step selects one hypothesis. Human approvals and reviews advance the continuing investigation loop; there is no unattended infinite exploit generation service. Execution/model reservations, maximum depth, response size, timeout, and per-case retry limits bound work.
+One step proposes one hypothesis. Human approvals and reviews advance the loop. Model/execution reservations, maximum depth, response bounds, deadlines and per-case retry limits bound work. [Testing](testing.md) records the actual-engine and provider checks.
 
-## Deliberate tradeoffs
+## Operating assumptions
 
-One journal and one bounded worker are sufficient for this demonstration. This is not a high-availability multi-region design. The application and runner are trusted components; a compromised host or runner signing secret is outside the evidence integrity guarantee. A local audit hash chain needs an independently stored head to detect replacement of the entire history. A graph path suggests compatibility; the chain fixture actually tests sequential steps to establish the specific synthetic chain.
+The demonstration uses one journal and bounded worker. Application and runner hosts are trusted. HMAC evidence establishes integrity relative to the signing runner; a compromised host or signing key is outside that trust boundary. Detecting replacement of the entire audit history requires an independently stored head hash. A graph path identifies supported prerequisites; the sequential chain fixture establishes only the specific executed synthetic chain.

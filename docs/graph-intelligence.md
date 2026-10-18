@@ -1,26 +1,28 @@
 # Evidence-aware graph intelligence
 
-The graph drives candidate discovery; the added tools make its assumptions inspectable. Every operation uses a fixed query and server-resolved tenant identity. No user or model may supply arbitrary Cypher.
+FalkorDB drives candidate discovery and makes its supporting evidence inspectable. Each operation uses a fixed query and server-resolved workspace identity. User and model input never becomes arbitrary Cypher.
 
-## Actual FalkorDB capabilities used
+[Documentation index](index.md) · [Architecture and schema](architecture.md)
 
-| Capability | Product behavior | Implementation |
-|---|---|---|
-| Parameterized Cypher and range index | Resolve graph identities and match current evidence-backed capabilities to every required prerequisite. | `src/arcloom/graph.py` |
-| Multi-hop relationships | Connect findings, capabilities, assets, runs, decisions, and historical revisions; follow recorded provenance. | `graph.py`, `workflow.py`, `intelligence.py` |
-| Persistence and isolated graphs | Fresh processes recover memory; tenant graphs are separate; no in-memory fallback impersonates FalkorDB. | `runtime.py`, graph integration and process-handoff tests |
-| Native full-text index | Search persisted entity titles and descriptions and inspect returned nodes. Relevance is not duplicate identity or proof. | `GraphIntelligence.prepare/search` |
-| Read-only queries | Inspect memory and perform an evidence-withdrawal experiment without changing historical observations. | `GraphIntelligence.withdraw` |
-| Native PageRank over asset CALLS edges | Inspect dependency importance. It does not measure vulnerability severity or exploit probability. | `GraphIntelligence.diagnostics` |
-| GRAPH.EXPLAIN | Show the actual execution plan of the candidate-discovery query without executing that query. | `GraphIntelligence.diagnostics` |
+## Graph capabilities in the product
 
-These additions do not claim every FalkorDB feature is necessary. GraphRAG SDK, Graphiti, vector search, MCP transport, graph-copy simulations, constraints, cluster operation, and replication are not implemented by this upgrade. A five-test synthetic catalog does not justify fabricated embeddings or an additional memory framework. Before expanding to real corpora, evaluate hybrid full-text/vector retrieval with real versioned embeddings and retain exact authorization/revision filters.
+| FalkorDB capability | Arcloom behavior | Implementation |
+| --- | --- | --- |
+| Parameterized Cypher and range index | Resolve entity identities and require current evidence-backed support for every test prerequisite | [graph.py](../src/arcloom/graph.py) |
+| Multi-hop relationships | Follow findings, capabilities, assets, runs, decisions and historical provenance | [workflow.py](../src/arcloom/workflow.py), [intelligence.py](../src/arcloom/intelligence.py) |
+| Persistent isolated graphs | Recover memory in fresh processes and separate workspace projections | [runtime.py](../src/arcloom/runtime.py) |
+| Native full-text index | Search persisted entity titles/descriptions and inspect returned nodes | `GraphIntelligence.prepare/search` |
+| Read-only queries | Inspect memory and experiment with withdrawn evidence while preserving history | `GraphIntelligence.withdraw` |
+| PageRank over asset `CALLS` edges | Inspect dependency importance | `GraphIntelligence.diagnostics` |
+| `GRAPH.EXPLAIN` | Show the actual candidate query execution plan without executing it | `GraphIntelligence.diagnostics` |
 
-## Evidence withdrawal, not a claimed universal patch simulator
+Search relevance is a retrieval aid rather than proof or duplicate identity. PageRank is an inspection measure; it does not drive selection or measure exploit probability. The five-test synthetic catalog uses exact prerequisites and native full-text retrieval. Larger corpora should motivate measured retrieval experiments while preserving exact revision and authorization filters.
 
-Select a current finding in Memory graph and choose **Run withdrawal analysis**. The backend retrieves that finding plus current descendants linked through recorded `DERIVED_FROM` edges, up to five hops. It retrieves every enabled test's prerequisites and all current confirmed providers of those capabilities from the same tenant and deployment revision.
+## Evidence withdrawal
 
-For each required capability, the experiment removes providers in the withdrawn provenance set. A test remains supported only when **every** prerequisite still has at least one provider. An independently sourced finding can preserve a capability even when the original source is withdrawn. The UI displays before/after counts, actual provenance paths, and the IDs of alternative evidence providers.
+Select a current finding in Memory graph and choose **Run withdrawal analysis**. The backend reads the finding and its current descendants along recorded `DERIVED_FROM` edges, up to five hops. It retrieves enabled tests, their requirements and all current confirmed providers of those capabilities in the same workspace and revision.
+
+For each required capability, the experiment removes providers in the withdrawn provenance set. A test remains supported only when **every** prerequisite retains at least one provider. Independent evidence may preserve a capability even when the original source is withdrawn. The UI shows before/after counts, provenance paths and alternative provider IDs.
 
 ```text
 Finding A ──ENABLES──> Capability X <──REQUIRES── Test B
@@ -32,19 +34,17 @@ Independent Finding D ──ENABLES──> Capability X
 Withdraw A and its recorded descendants:
   X can remain supported by D.
   Y loses support when its only provider was C.
-  Historical receipts are unchanged. Reproduction must still be tested.
+  Historical receipts are unchanged.
 ```
 
-The calculation concerns **evidence/prerequisite support**, not all execution eligibility. Scope, approvals, prior attempts, depth, and budgets are checked elsewhere. A downstream issue may remain independently exploitable after an upstream patch; this tool does not assert otherwise. A provenance dependency is not automatically a complete causal model of software behavior.
+This measures prerequisite support. Full eligibility also depends on scope, approvals, prior attempts, depth and budgets. Recorded provenance is not a complete causal model of software: losing support does not prove a downstream flaw is fixed. Reproduction and revision-specific evidence remain necessary.
 
-The analysis caps entity count at 400 and paths/prerequisite rows at 200 for this demo. It refuses oversized analyses instead of silently reporting incomplete results. All read endpoints are authenticated and rate limited. The response includes the journal event head; changes during analysis cause a retryable conflict. Native search returns at most twenty results with explicit truncation. Query-plan output is capped and reports truncation.
+## Bounds and consistency
 
-## Show judges the mechanism
+The demo permits up to 400 entities and 200 paths/prerequisite rows. It refuses an oversized analysis instead of quietly omitting support. Read endpoints require authentication and enforce rate limits. Analysis includes the journal event head; concurrent changes produce a retryable conflict. Search returns at most twenty results with explicit truncation. Query-plan output is bounded and reports truncation.
 
-First verify the gateway fixture, stop the first investigator, and start a fresh one. Display the exact Cypher and supporting IDs that made the invoice test eligible. Verify the separate issue and then the combined chain with actual tests and evidence review. Use withdrawal analysis to challenge the supporting graph, and show alternative support where it exists. Advance the lab revision and revalidate instead of erasing old receipts.
+To inspect the mechanism, verify the gateway fixture, start a fresh investigator and inspect the exact supporting IDs and query. Confirm the invoice issue and chain separately. Challenge support with withdrawal analysis, then advance revision and revalidate with historical receipts intact. [Demo guide](demo.md).
 
-Do not present PageRank as part of the selection policy: it is currently an inspection tool. Do not claim a graph-selected registered test is unconstrained zero-day generation. The novelty demonstrated is verifiable, transferable security memory and explicit handling of outdated or withdrawn support.
+## Primary references
 
-## Primary documentation
-
-[Full-text indexing](https://docs.falkordb.com/cypher/indexing/fulltext-index.html), [vector indexing](https://docs.falkordb.com/cypher/indexing/vector-index.html), [PageRank](https://docs.falkordb.com/algorithms/pagerank.html), [GRAPH.EXPLAIN](https://docs.falkordb.com/commands/graph.explain.html), [GRAPH.COPY](https://docs.falkordb.com/commands/graph.copy.html), [constraints](https://docs.falkordb.com/commands/graph.constraint-create.html), [FalkorDB documentation](https://docs.falkordb.com/).
+[Full-text indexing](https://docs.falkordb.com/cypher/indexing/fulltext-index.html) · [PageRank](https://docs.falkordb.com/algorithms/pagerank.html) · [GRAPH.EXPLAIN](https://docs.falkordb.com/commands/graph.explain.html) · [FalkorDB documentation](https://docs.falkordb.com/)

@@ -14,7 +14,7 @@ import httpx
 from arcloom.agents import PlanResult
 from arcloom.config import Settings
 from arcloom.domain import Candidate, DomainError, Selection
-from arcloom.http_boundary import bounded_json
+from arcloom.http_boundary import DeadlineTransport, bounded_json
 from arcloom.storage import canonical
 
 # Input-token rates published in Cloudflare's 2026-10-09 changelog.
@@ -95,7 +95,13 @@ class ClefPlanner:
             with httpx.Client(
                 timeout=self.settings.model_timeout_seconds,
                 follow_redirects=False,
-                transport=self.transport,
+                transport=self.transport
+                if self.transport is not None
+                else DeadlineTransport(
+                    self.settings.model_timeout_seconds,
+                    error_prefix="model",
+                    deadline=self.settings._model_deadline,
+                ),
                 trust_env=False,
             ) as client:
                 envelope = bounded_json(

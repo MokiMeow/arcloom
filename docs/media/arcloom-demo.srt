@@ -1,0 +1,290 @@
+1
+00:00:01,600 --> 00:00:05,123
+One security finding is rarely
+the end of an investigation.
+
+2
+00:00:05,163 --> 00:00:09,529
+A weakness in one service can make a test
+of a connected service worth running.
+
+3
+00:00:09,569 --> 00:00:13,238
+But when an agent's session
+ends, its context ends with it.
+
+4
+00:00:13,329 --> 00:00:17,742
+The next investigator inherits
+chat logs, not verified facts.
+
+5
+00:00:17,802 --> 00:00:21,545
+Arcloom keeps reviewed evidence
+in a FalkorDB knowledge graph,
+
+6
+00:00:21,585 --> 00:00:26,533
+so a fresh investigator can see which
+next experiment is justified, and why.
+
+7
+00:00:27,129 --> 00:00:29,862
+We begin with a gateway-boundary
+report in our synthetic
+
+8
+00:00:29,902 --> 00:00:33,259
+lab. A report is still only a claim.
+
+9
+00:00:33,594 --> 00:00:38,170
+An authorized reviewer approves the
+registered test before anything executes.
+
+10
+00:00:38,567 --> 00:00:42,602
+The runner records real HTTP
+observations: the baseline is
+
+11
+00:00:42,642 --> 00:00:46,397
+denied, while the seeded
+routing context succeeds.
+
+12
+00:00:46,437 --> 00:00:51,510
+We verify the evidence against its
+signed receipt and SHA-256 digest.
+
+13
+00:00:51,550 --> 00:00:56,405
+A separate review accepts the observation.
+Only then does it become a finding.
+
+14
+00:00:57,752 --> 00:01:03,272
+That accepted finding is stored in FalkorDB
+Cloud: our running instance in Mumbai.
+
+15
+00:01:03,312 --> 00:01:06,184
+This is the actual knowledge
+graph behind the demo,
+
+16
+00:01:06,224 --> 00:01:09,909
+returned by a read-only
+query against that database.
+
+17
+00:01:09,949 --> 00:01:15,407
+Findings enable capabilities. Tests
+require capabilities, and target assets.
+
+18
+00:01:15,469 --> 00:01:18,527
+The gateway finding enables
+internal route access,
+
+19
+00:01:18,567 --> 00:01:21,599
+exactly what the invoice test requires.
+
+20
+00:01:21,914 --> 00:01:25,171
+A test is eligible only when
+every capability it requires has
+
+21
+00:01:25,211 --> 00:01:29,276
+current, confirmed support.
+The chain test needs two.
+
+22
+00:01:30,779 --> 00:01:33,303
+A fresh investigator starts
+in a separate command-line
+
+23
+00:01:33,343 --> 00:01:36,537
+process, with zero previous messages.
+
+24
+00:01:36,877 --> 00:01:41,377
+It reads only what FalkorDB returns:
+the invoice test requires internal
+
+25
+00:01:41,417 --> 00:01:45,044
+route access, and the confirmed
+gateway finding supplies it.
+
+26
+00:01:45,084 --> 00:01:49,763
+A model can help choose a candidate, but
+it cannot grant permission to run it.
+
+27
+00:01:50,735 --> 00:01:54,571
+Once approved, the invoice test
+reproduces a separate tenant-ownership
+
+28
+00:01:54,611 --> 00:01:58,630
+weakness: one tenant reads
+another tenant's invoice.
+
+29
+00:01:58,740 --> 00:02:01,737
+After review, it supplies a second capability.
+
+30
+00:02:02,054 --> 00:02:07,094
+A second fresh process can now propose the
+chain, because both prerequisites exist.
+
+31
+00:02:07,288 --> 00:02:11,461
+The runner executes the chain under
+one synthetic identity and revision.
+
+32
+00:02:11,501 --> 00:02:14,433
+The graph explains why the
+test is worth attempting.
+
+33
+00:02:14,473 --> 00:02:18,526
+The observations and the review
+establish what actually happened.
+
+34
+00:02:20,778 --> 00:02:24,193
+Useful memory also includes
+failure and uncertainty.
+
+35
+00:02:24,470 --> 00:02:28,867
+The export service denies the request,
+so that issue is not reproduced.
+
+36
+00:02:28,907 --> 00:02:31,628
+The unavailable audit service
+produces an inconclusive
+
+37
+00:02:31,668 --> 00:02:34,387
+result. Neither becomes a finding.
+
+38
+00:02:34,606 --> 00:02:37,780
+Both outcomes stay in memory,
+so the next investigator
+
+39
+00:02:37,820 --> 00:02:40,736
+does not propose the same
+attempted work again.
+
+40
+00:02:41,856 --> 00:02:44,730
+The handoff is inspectable: verified receipts,
+
+41
+00:02:44,770 --> 00:02:49,172
+current support paths, blocked
+reasons and negative observations.
+
+42
+00:02:49,788 --> 00:02:54,506
+Its canonical JSON export
+carries a SHA-256 digest.
+
+43
+00:02:54,546 --> 00:02:59,371
+External agents can read the same memory
+through three authenticated MCP tools:
+
+44
+00:02:59,411 --> 00:03:04,001
+the handoff, the investigation
+list, and a single investigation.
+
+45
+00:03:04,041 --> 00:03:07,426
+These tools are read-only.
+Reading memory creates no agent,
+
+46
+00:03:07,466 --> 00:03:10,939
+calls no model, and authorizes no execution.
+
+47
+00:03:12,562 --> 00:03:16,969
+Evidence can change. Withdrawal analysis
+shows which tests would lose support if a
+
+48
+00:03:17,009 --> 00:03:21,741
+finding were withdrawn, counting any
+independent evidence that still holds.
+
+49
+00:03:21,781 --> 00:03:25,294
+After a deployment moves to
+revision r2, old findings remain
+
+50
+00:03:25,334 --> 00:03:29,053
+in history, but cannot
+silently justify new work.
+
+51
+00:03:29,093 --> 00:03:32,137
+Explicit revalidation
+records the new behavior:
+
+52
+00:03:32,309 --> 00:03:35,402
+the patched gateway now
+rejects the routing context.
+
+53
+00:03:35,442 --> 00:03:37,735
+A blocked gateway can stop this chain.
+
+54
+00:03:37,775 --> 00:03:41,167
+It does not prove every
+downstream service is secure.
+
+55
+00:03:42,026 --> 00:03:45,643
+Arcloom combines FalkorDB, a
+durable investigation journal,
+
+56
+00:03:45,683 --> 00:03:49,054
+signed evidence and a scoped HTTP runner.
+
+57
+00:03:49,094 --> 00:03:52,463
+Separate live checks validated
+ChatGPT Luna and Gemini;
+
+58
+00:03:52,635 --> 00:03:56,085
+this repeatable demo uses
+deterministic selection.
+
+59
+00:03:56,369 --> 00:04:00,006
+One discovery becomes a justified
+next experiment, with evidence that
+
+60
+00:04:00,046 --> 00:04:03,521
+survives the handoff, and knows
+when its support has expired.

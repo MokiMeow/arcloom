@@ -310,6 +310,12 @@ class Cases:
     def approve(self, actor: Actor, case_id: str, value: ApprovalInput, key: str) -> dict:
         require(actor, Role.REVIEWER)
         body, operation = value.model_dump(), "approve_" + case_id
+        # Replays return the committed result even if a dependency is now offline.
+        # Admission still checks the cache again inside its transition transaction.
+        with self.store.transaction() as conn:
+            old = cached(conn, actor, operation, key, body)
+            if old:
+                return old
         if value.decision == "approve":
             self.projector.require_current(actor.tenant)
         with self.store.transaction() as conn:

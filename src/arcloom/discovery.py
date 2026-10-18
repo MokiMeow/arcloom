@@ -1,5 +1,6 @@
 """One bounded, fresh-context investigation step, recoverable from persisted state."""
 
+import json
 import sqlite3
 import time
 from collections.abc import Callable
@@ -24,9 +25,15 @@ class Discovery:
         projector: Projector,
         evidence: EvidenceStore,
         planner_factory: Callable[[], PlannerPort],
+        *,
+        settings_factory: Callable[[], Settings] | None = None,
+        snapshot_planner_factory: Callable[[Settings], PlannerPort] | None = None,
     ):
         self.store, self.settings, self.graph = store, settings, graph
         self.projector, self.evidence, self.planner_factory = projector, evidence, planner_factory
+        self.settings_factory = settings_factory
+        self.snapshot_planner_factory = snapshot_planner_factory
+        self._initial_planner_factory = planner_factory
 
     def run(self, actor: Actor, value: DiscoveryInput, key: str) -> dict:
         require(actor, Role.REVIEWER)
@@ -34,19 +41,38 @@ class Discovery:
         with self.store.transaction() as conn:
             old = cached(conn, actor, operation, key, body)
             if old:
+                if old.get("status") == "planning":
+                    active = conn.execute(
+                        "SELECT 1 FROM locks WHERE name=? AND expires_at>?",
+                        ("discovery_" + actor.tenant, time.time()),
+                    ).fetchone()
+                    if not active:
+                        old = self._interrupted(old)
+                        self._finish_tx(conn, actor, key, old["agent_id"], old, 0, 0)
                 return old
         owner = new_id("discovery_lock")
         lock = "discovery_" + actor.tenant
         if not self.store.acquire_lock(lock, owner, 90):
             raise DomainError("discovery_busy", "Another discovery step is already running", 409)
         agent_id = None
+        settings = self.settings
         try:
+            # Capture provider/model/credential together under the workspace lease.
+            # Configuration changes can only affect a later investigation.
+            settings = (
+                self.settings_factory()
+                if self.settings_factory
+                else self.settings.model_copy(deep=True)
+            )
+            with self.store.transaction() as conn:
+                self._require_lease(conn, actor.tenant, owner)
+                self._recover_planning(conn, actor)
             self.projector.require_current(actor.tenant)
             scope = self.store.one("SELECT * FROM tenants WHERE id=?", (actor.tenant,))
             revision = scope["revision"]
             if (
                 not scope["scope_enabled"]
-                or time.time() > scope["created_at"] + self.settings.assessment_seconds
+                or time.time() > scope["created_at"] + settings.assessment_seconds
             ):
                 raise DomainError(
                     "scope_paused", "Discovery is paused or the assessment window expired", 403
@@ -78,13 +104,14 @@ class Discovery:
                 old = cached(conn, actor, operation, key, body)
                 if old:
                     return old
-                if candidates and self.settings.provider != "deterministic":
+                self._require_lease(conn, actor.tenant, owner)
+                if candidates and settings.provider != "deterministic":
                     budget = row_or_error(
                         conn,
                         "SELECT * FROM budgets WHERE tenant=? AND revision=?",
                         (actor.tenant, revision),
                     )
-                    if budget["model_calls"] >= self.settings.model_call_budget:
+                    if budget["model_calls"] >= settings.model_call_budget:
                         raise DomainError("model_budget", "The model-call budget is exhausted", 403)
                     # Failed calls also consume a reservation; failures cannot bypass the cap.
                     conn.execute(
@@ -97,8 +124,8 @@ class Discovery:
                         agent_id,
                         actor.tenant,
                         actor.id,
-                        self.settings.provider,
-                        self.settings.model,
+                        settings.provider,
+                        settings.model,
                         "planning",
                         value.source_finding_id,
                         canonical([c.public() for c in candidates]),
@@ -109,7 +136,7 @@ class Discovery:
                     "agent_id": agent_id,
                     "status": "planning",
                     "case_id": None,
-                    "provider": self.settings.provider,
+                    "provider": settings.provider,
                     "tool": tool,
                 }
                 remember(conn, actor, operation, key, body, pending)
@@ -120,8 +147,8 @@ class Discovery:
                     actor.id,
                     agent_id,
                     {
-                        "provider": self.settings.provider,
-                        "model": self.settings.model,
+                        "provider": settings.provider,
+                        "model": settings.model,
                         "previous_messages": 0,
                         "tool": tool,
                     },
@@ -133,9 +160,15 @@ class Discovery:
                     "reason": "No unattempted, currently supported graph path remains.",
                     "candidates": [],
                 }
-                self._finish(actor, key, agent_id, result, 0, 0)
+                self._finish(actor, key, agent_id, result, 0, 0, owner=owner)
                 return result
-            plan = self.planner_factory().select(candidates[:10])
+            planner = (
+                self.snapshot_planner_factory(settings)
+                if self.snapshot_planner_factory
+                and self.planner_factory is self._initial_planner_factory
+                else self.planner_factory()
+            )
+            plan = planner.select(candidates[:10])
             if plan.selection is None:
                 result = {
                     **pending,
@@ -145,12 +178,15 @@ class Discovery:
                     "candidates": [c.public() for c in candidates],
                     "decision": plan.decision,
                 }
-                self._finish(actor, key, agent_id, result, plan.input_tokens, plan.output_tokens)
+                self._finish(
+                    actor, key, agent_id, result, plan.input_tokens, plan.output_tokens, owner=owner
+                )
                 return result
             selected = check_selection(plan.selection, candidates[:10])
             with self.store.transaction() as conn:
+                self._require_lease(conn, actor.tenant, owner)
                 scope_check(
-                    conn, self.settings, actor.tenant, selected.test_id, selected.asset_id, revision
+                    conn, settings, actor.tenant, selected.test_id, selected.asset_id, revision
                 )
                 virtual = {
                     "tenant": actor.tenant,
@@ -223,7 +259,7 @@ class Discovery:
                                     "AgentSession",
                                     agent_id,
                                     title="Fresh investigation context",
-                                    provider=self.settings.provider,
+                                    provider=settings.provider,
                                     previous_messages=0,
                                 ),
                             ],
@@ -255,7 +291,7 @@ class Discovery:
                     "agent_id": agent_id,
                     "status": "failed",
                     "case_id": None,
-                    "provider": self.settings.provider,
+                    "provider": settings.provider,
                     "error": error_code,
                     "reason": "Discovery did not finish. No finding or execution was created by this failure.",
                 }
@@ -302,6 +338,49 @@ class Discovery:
             result.append(candidate)
         return result
 
+    @staticmethod
+    def _interrupted(pending: dict) -> dict:
+        return {
+            **pending,
+            "status": "failed",
+            "error": "discovery_interrupted",
+            "reason": "Planning was interrupted. This request will not be replayed; "
+            "start a new discovery request to explicitly reserve another attempt.",
+        }
+
+    def _recover_planning(self, conn: sqlite3.Connection, actor: Actor) -> None:
+        # The caller owns the workspace lease. Earlier planners cannot commit a
+        # proposal after losing it, so their durable pending responses can close.
+        requests = conn.execute(
+            "SELECT i.actor,i.key,i.response FROM idempotency i "
+            "JOIN agent_sessions a ON a.tenant=i.tenant AND a.actor=i.actor "
+            "AND a.id=json_extract(i.response,'$.agent_id') "
+            "WHERE i.tenant=? AND i.operation='discover' AND a.status='planning'",
+            (actor.tenant,),
+        ).fetchall()
+        for request in requests:
+            result = self._interrupted(json.loads(request["response"]))
+            self._finish_tx(
+                conn,
+                actor,
+                request["key"],
+                result["agent_id"],
+                result,
+                0,
+                0,
+                request_actor=request["actor"],
+            )
+
+    @staticmethod
+    def _require_lease(conn: sqlite3.Connection, tenant: str, owner: str) -> None:
+        if not conn.execute(
+            "SELECT 1 FROM locks WHERE name=? AND owner=? AND expires_at>?",
+            ("discovery_" + tenant, owner, time.time()),
+        ).fetchone():
+            raise DomainError(
+                "discovery_interrupted", "The planning lease expired or changed ownership", 409
+            )
+
     def _finish(
         self,
         actor: Actor,
@@ -310,8 +389,12 @@ class Discovery:
         result: dict,
         input_tokens: int,
         output_tokens: int,
+        *,
+        owner: str | None = None,
     ):
         with self.store.transaction() as conn:
+            if owner is not None:
+                self._require_lease(conn, actor.tenant, owner)
             self._finish_tx(conn, actor, key, agent_id, result, input_tokens, output_tokens)
 
     def _finish_tx(
@@ -323,8 +406,15 @@ class Discovery:
         result: dict,
         input_tokens: int,
         output_tokens: int,
+        *,
+        request_actor: str | None = None,
     ):
         selection = result.get("selection", {})
+        session = row_or_error(
+            conn,
+            "SELECT provider,model FROM agent_sessions WHERE tenant=? AND id=?",
+            (actor.tenant, agent_id),
+        )
         conn.execute(
             "UPDATE agent_sessions SET status=?,selected_id=?,case_id=?,reason=?,input_tokens=?,output_tokens=?,finished_at=? WHERE id=?",
             (
@@ -340,7 +430,7 @@ class Discovery:
         )
         conn.execute(
             "UPDATE idempotency SET response=? WHERE tenant=? AND actor=? AND operation='discover' AND key=?",
-            (canonical(result), actor.tenant, actor.id, key),
+            (canonical(result), actor.tenant, request_actor or actor.id, key),
         )
         self.store.event(
             conn,
@@ -362,8 +452,8 @@ class Discovery:
                         "AgentSession",
                         agent_id,
                         title="Fresh investigation context",
-                        provider=self.settings.provider,
-                        model=self.settings.model,
+                        provider=session["provider"],
+                        model=session["model"],
                         previous_messages=0,
                         status=result["status"],
                         decision=result.get("decision"),

@@ -10,9 +10,7 @@ import pytest
 
 pytestmark = [
     pytest.mark.integration,
-    pytest.mark.skipif(
-        os.environ.get("ARCLOOM_TEST_GRAPH") != "lite", reason="Requires actual embedded FalkorDB"
-    ),
+    pytest.mark.skipif(not os.environ.get("ARCLOOM_TEST_GRAPH"), reason="Requires actual FalkorDB"),
 ]
 CODE = """
 import json, os, sys
@@ -23,13 +21,24 @@ from arcloom.domain import DiscoveryInput
 from tests.ports import FixtureRunner
 from tests.helpers import confirm
 from tests.conftest import ADMIN, RUNNER
-s=Settings(_env_file=None, data_dir=Path(sys.argv[1]), graph_mode='lite', admin_token=ADMIN, runner_secret=RUNNER, worker_enabled=False)
+from arcloom.storage import digest
+s=Settings(
+ _env_file=None, data_dir=Path(sys.argv[1]),
+ graph_mode=os.environ['ARCLOOM_TEST_GRAPH'],
+ graph_host=os.environ.get('ARCLOOM_TEST_GRAPH_HOST', '127.0.0.1'),
+ graph_port=int(os.environ.get('ARCLOOM_TEST_GRAPH_PORT', '6379')),
+ graph_password=os.environ.get('ARCLOOM_TEST_GRAPH_PASSWORD', ''),
+ tenant='handoff_'+digest(sys.argv[1])[:16],
+ admin_token=ADMIN, runner_secret=RUNNER, worker_enabled=False)
 r=Runtime(s,runner=FixtureRunner(RUNNER));r.initialize()
 try:
  actor=r.auth.bearer(ADMIN)
  result=confirm(r,actor) if sys.argv[2]=='A' else r.discovery.run(actor,DiscoveryInput(),'process-b-request')
  print(json.dumps({'pid':os.getpid(),'result':result}))
-finally:r.close()
+finally:
+ if sys.argv[2]=='B' and s.graph_mode=='server':
+  r.graph._database().select_graph(r.graph.graph_name(s.tenant)).delete()
+ r.close()
 """
 
 

@@ -1,9 +1,12 @@
+import re
 from pathlib import Path
 from typing import Literal
 from urllib.parse import urlsplit
 
-from pydantic import Field, SecretStr, field_validator, model_validator
+from pydantic import Field, PrivateAttr, SecretStr, field_validator, model_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
+
+from arcloom.cloudflare_auth import renewal_deadline
 
 
 class Settings(BaseSettings):
@@ -15,6 +18,7 @@ class Settings(BaseSettings):
     graph_mode: Literal["server", "lite"] = "server"
     graph_host: str = "127.0.0.1"
     graph_port: int = Field(6379, ge=1, le=65535)
+    graph_username: str = ""
     graph_password: SecretStr = SecretStr("")
     graph_ssl: bool = False
     graph_prefix: str = "arcloom_v1"
@@ -40,14 +44,26 @@ class Settings(BaseSettings):
     lab_url: str = "http://127.0.0.1:9001"
     runner_secret: SecretStr = SecretStr("")
     lab_timeout_seconds: float = Field(8.0, ge=0.1, le=15)
-    provider: Literal["deterministic", "openai", "anthropic", "cloudflare"] = "deterministic"
+    provider: Literal["deterministic", "openai", "anthropic", "cloudflare", "gemini", "chatgpt"] = (
+        "deterministic"
+    )
     model: str = ""
     model_api_key: SecretStr = SecretStr("")
     model_timeout_seconds: float = Field(20.0, ge=1, le=30)
     cloudflare_account_id: str = ""
+    # Explicit, fixed opt-in: this does not change Cloudflare's token lifetime.
+    cloudflare_wrangler_until: int | None = None
+    _cloudflare_environment_credential: bool = PrivateAttr(default=False)
+    _model_deadline: float | None = PrivateAttr(default=None)
+    chatgpt_profile_id: str = ""
     clef_min_confidence: float = Field(0.70, ge=0, le=1)
     clef_min_margin: float = Field(0.15, ge=0, le=1)
     web_dist: Path = Path("apps/web/dist")
+
+    @field_validator("cloudflare_wrangler_until", mode="before")
+    @classmethod
+    def bounded_wrangler_deadline(cls, value):
+        return None if value is None else renewal_deadline(value)
 
     @field_validator("graph_prefix", "tenant")
     @classmethod
@@ -79,10 +95,16 @@ class Settings(BaseSettings):
 
     @model_validator(mode="after")
     def valid_provider(self) -> "Settings":
-        if self.provider != "deterministic" and (
+        if self.provider not in {"deterministic", "chatgpt"} and (
             not self.model or not self.model_api_key.get_secret_value()
         ):
             raise ValueError("A model ID and API key are required for the selected model provider")
+        if self.provider == "gemini" and not re.fullmatch(
+            r"[A-Za-z0-9][A-Za-z0-9._-]{0,127}", self.model
+        ):
+            raise ValueError(
+                "Use a bare Gemini model ID with only ASCII letters, digits, dots, underscores or hyphens"
+            )
         if self.provider == "cloudflare":
             model = self.model.removeprefix("@cf/cloudflare/")
             if model not in {"clef", "clef-flash", "clef-omni"}:
