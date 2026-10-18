@@ -1,6 +1,6 @@
 # Public UI demo
 
-**[Open the interactive Arcloom demo](https://arcloom-demo-olbo855az-mokimeows-projects.vercel.app)** · [Watch the narrated walkthrough](https://youtu.be/Z8RMloVLsig)
+**[Open the interactive Arcloom demo](https://arcloom-demo-aazb5gax7-mokimeows-projects.vercel.app)** · [Watch the narrated walkthrough](https://youtu.be/Z8RMloVLsig)
 
 The Vercel preview is an interactive, read-only tour of Arcloom. It uses the same React components as the full application with two explicit recorded synthetic states: a reviewed `r1` investigation and the post-patch `r2` workspace.
 
@@ -25,6 +25,8 @@ npm --prefix apps/web run preview:demo -- --port 4173
 For Vercel, set the project root to `apps/web`. Its `vercel.json` selects the demo build and `dist-demo` output. The ordinary build retains its separate `dist` directory. No backend or provider credentials are required for this static deployment.
 
 Run `npm --prefix apps/web run e2e:demo` to exercise navigation, exports, graph tools, policy and historical cases at 320, 390, 768, 1024 and 1440px. These browser tests use a separate static server and require no backend credentials.
+
+The graph automatically fits its cards and relationship routes on first render, focus changes and canvas resizing. Use **Read labels** to inspect a card at full size and **Fit graph** to return to the complete path. Both the focused investigation and the whole recorded workspace are included in responsive checks. The deployed tour also passed Chromium and WebKit checks at all five widths; [validation details](testing.md).
 
 ## Full hosted operation
 

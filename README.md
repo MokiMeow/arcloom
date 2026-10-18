@@ -4,9 +4,9 @@
 
 Arcloom gives a fresh investigator a verified starting point. A researcher submits a report, a reviewer approves a bounded synthetic test, and accepted evidence becomes persistent FalkorDB memory. The next investigator follows the graph to a related test - with supporting findings, deployment revision and researcher attribution intact.
 
-[Explore the UI demo](https://arcloom-demo-olbo855az-mokimeows-projects.vercel.app) · [Watch the video](https://youtu.be/Z8RMloVLsig) · [Engineering story](docs/blog/README.md) · [Quickstart](#run-locally) · [Documentation](docs/index.md)
+[Explore the UI demo](https://arcloom-demo-aazb5gax7-mokimeows-projects.vercel.app) · [Watch the video](https://youtu.be/Z8RMloVLsig) · [Engineering story](docs/blog/README.md) · [Quickstart](#run-locally) · [Documentation](docs/index.md)
 
-The **[public UI demo](https://arcloom-demo-olbo855az-mokimeows-projects.vercel.app)** lets visitors explore two recorded synthetic states, `r1` and patched `r2`, without logging in. It is clearly labelled and read-only. The [full local application](#run-locally) runs new approved investigations, reviews and optional model calls. [Demo and hosting details](docs/ui-demo.md).
+The **[public UI demo](https://arcloom-demo-aazb5gax7-mokimeows-projects.vercel.app)** lets visitors explore two recorded synthetic states, `r1` and patched `r2`, without logging in. It is clearly labelled and read-only. The [full local application](#run-locally) runs new approved investigations, reviews and optional model calls. [Demo and hosting details](docs/ui-demo.md).
 
 ## Watch the investigation continue
 

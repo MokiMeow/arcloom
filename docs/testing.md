@@ -13,7 +13,8 @@ remains part of operating the application.
 | --- | --- |
 | Full Python suite with actual local FalkorDB Server | **539 passed, 2 skipped** |
 | Frontend component and behavior tests | **105 passed**, including read-only demo boundaries |
-| Public UI demo, Chromium responsive scenarios | **5 passed** at 320, 390, 768, 1024 and 1440px; navigation, exports, graph tools, policy and historical cases |
+| Public UI demo, Chromium responsive scenarios | **5 passed** at 320, 390, 768, 1024 and 1440px; navigation, exports, graph tools, policy and historical cases; focused/whole graph fitting and desktop-to-phone resize |
+| Deployed Vercel UI demo, Chromium and WebKit | **90 view checks passed** across those five widths; zero page errors, API requests or horizontal overflow; fresh browser contexts without login |
 | Chromium browser scenarios, actual graph and separate HTTP lab | **8 passed** |
 | Ruff lint/format and frozen dependency lock check | Passed |
 | TypeScript, production build and Prettier | Passed |
@@ -33,6 +34,8 @@ for presentation workspace routing, renewal configuration and a request deadline
 that previously allowed separate network phases to exceed the intended budget.
 
 The browser sequence covers report approval, actual signed observations, evidence acceptance, fresh-context follow-ups, a chain, negative/inconclusive memory, revision revalidation, graph interaction, mobile navigation, session errors and one-time token retention. Browser runs use deterministic planning and disposable credentials. Live provider calls are separate checks.
+
+The [public UI demo](ui-demo.md) was checked separately against its deployed Vercel URL. Each browser engine exercised nine views or recorded states at every width, including exports, recorded integrity/audit checks, graph search, withdrawal analysis, diagnostics, policy and historical cases. These are automated browser viewport checks, not physical-device certification. The normal application build excludes the recorded demo fixture chunk.
 
 New browser checks independently recompute the downloaded packet's canonical
 SHA-256, inspect its verified prerequisite/evidence fields and exercise WebMCP
