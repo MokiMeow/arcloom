@@ -1,28 +1,19 @@
-# AI assistance disclosure
+# Human direction and AI assistance
 
-AI assistance was used to research implementation options, write and refine backend and frontend code, create tests and documentation, and investigate failures during development. This disclosure describes the use of assistance; it does not assign unverified contributions or review activities to individual participants.
+Arcloom is a human-directed project built with AI assistance. The project owner originated the connected-investigation idea, defined the report-to-review-to-follow-up workflow, set the product and design priorities, managed provider and database account setup, and reviewed the resulting interface, diagrams, video and article. Feedback drove revisions to graph readability, evidence presentation, the public demo and the submission materials.
 
-Recorded validation includes Python tests, actual FalkorDB integration, a separate-process memory handoff, frontend compilation and browser automation. [Testing](docs/testing.md) distinguishes automated checks, live provider calls and the limits of those results. Synthetic vulnerabilities are intentional fixtures, not newly discovered weaknesses in a real organization.
+AI coding assistants supported research, backend and frontend implementation, debugging, tests and documentation. They also helped translate the owner's requirements and review feedback into working code and presentation assets. The project should be assessed through its behavior, implementation and recorded verification. See [why we built Arcloom](docs/project-story.md) and the [validation record](docs/testing.md).
 
-At runtime, Arcloom defaults to a visibly labelled deterministic planner. Optional live providers receive bounded graph candidates and may propose a test or abstain. They cannot approve execution or accept evidence. A model response does not establish a vulnerability. Each operator supplies their own provider credentials or account consent; no development account or credential is shipped with the project.
+## Development and review
 
-Project participants remain responsible for understanding and reviewing the submitted work, accurately documenting their own contributions, protecting credentials and meeting the event's eligibility and disclosure requirements. The repository's existing [license](LICENSE) governs its use.
+The owner supplied the concept and acceptance priorities, selected integrations and reviewed the product's presentation. Automated checks exercised policy, actual FalkorDB queries, HTTP lab behavior, fresh-process handoffs and browser flows. These automated results and human product review are distinct activities. Participants are responsible for understanding the code, explaining its decisions and accurately representing their own contributions.
 
-The demonstration video was also produced with AI assistance. A new Claude Code
-session using Opus 5.5 at medium effort created the Remotion composition from a
-prepared script and actual application captures. Codex completed the export and
-verification. Narration is AI-generated speech from ElevenLabs (eleven_multilingual_v2,
-premade voice "Matilda", owner's free-tier account); it is not a participant's
-voice and no voice cloning was used. Captions are timed from ElevenLabs character
-timestamps. An earlier cut used a local Windows synthetic voice. The edit labels actual
-UI recordings, still captures, explanatory diagrams and excerpts of real CLI
-output; it does not present animated diagrams as product behavior. The main
-recording uses deterministic planning, with live model validation identified
-separately. See the [demo assets](docs/media/README.md).
+## Runtime planning
 
-The [project article](docs/blog/README.md) was drafted in the
-same Claude Opus session from the code, documentation and recorded execution
-evidence. Codex edited the draft, checked its query and claims, corrected diagram
-labels and assembled the DEV Markdown, images and local preview. The explanatory
-graphics were drawn with code; application screenshots come from the synthetic
-demonstration. Article preparation does not establish publication or submission.
+Arcloom defaults to a labelled deterministic planner. Optional live providers receive bounded graph candidates and may propose a test or abstain. They cannot approve execution or accept evidence. Each operator supplies their own credentials or account consent; no development account is shipped with the project.
+
+## Video and article
+
+The owner directed and reviewed the story, requested the database and graph showcase, and reviewed revisions to the cut and narration. Claude and Codex assisted with the Remotion implementation, capture preparation, editing and technical checks. Narration uses ElevenLabs' premade Matilda voice; captions follow its character timestamps. No voice cloning was used. The [demo](docs/media/README.md) distinguishes recorded behavior, explanatory diagrams and separately validated live-provider runs.
+
+The article was developed from the owner's concept, implementation and recorded evidence with drafting and editing assistance. Diagrams were drawn with code and application images came from the synthetic demonstration. The owner reviews and publishes the final submission. The repository's [license](LICENSE) governs its use.

@@ -9,12 +9,15 @@
   "scripts": {
     "dev": "vite --host 127.0.0.1",
     "build": "tsc -b && vite build",
+    "build:demo": "tsc -b && vite build --mode public-demo",
     "preview": "vite preview --host 127.0.0.1",
+    "preview:demo": "vite preview --host 127.0.0.1 --outDir dist-demo",
     "typecheck": "tsc --noEmit",
     "test": "vitest run src",
     "e2e": "playwright test",
-    "format": "prettier --write src e2e *.ts *.json index.html",
-    "format:check": "prettier --check src e2e *.ts *.json index.html"
+    "e2e:demo": "playwright test --config playwright.demo.config.ts",
+    "format": "prettier --write src e2e e2e-demo *.ts *.json index.html",
+    "format:check": "prettier --check src e2e e2e-demo *.ts *.json index.html"
   },
   "dependencies": {
     "@xyflow/react": "12.12.0",

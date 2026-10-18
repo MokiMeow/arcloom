@@ -15,12 +15,14 @@ data/
 node_modules/
 *.tsbuildinfo
 apps/web/dist/
+apps/web/dist-demo/
 playwright-report/
 test-results/
 *.log
 *.db
 *.db-*
 .DS_Store
+.vercel/
 
 # Local editorial handoffs and event administration; public story lives in docs/blog.
 /docs/submission/

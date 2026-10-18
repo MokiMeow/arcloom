@@ -27,6 +27,7 @@ import { ErrorNotice, Loading } from "./components/ui";
 import { BrandMark } from "./components/Brand";
 import { readLocation, locationFor, type View } from "./navigation";
 import { useWorkspaceAgentTools } from "./webmcp";
+import { PUBLIC_DEMO, demoScenario } from "./demoMode";
 
 const Memory = lazy(() =>
   import("./components/Memory").then((module) => ({ default: module.Memory })),
@@ -174,7 +175,9 @@ function Workspace({
   const d = useRemote<Dashboard>("/api/dashboard", revision, 2500);
   const catalog = useRemote<Catalog>("/api/catalog", 0);
   const canWrite = session.actor.role !== "viewer";
-  const browserToolsAvailable = useWorkspaceAgentTools(session);
+  const browserToolsAvailable = useWorkspaceAgentTools(
+    PUBLIC_DEMO ? null : session,
+  );
   const changed = () => setRevision((v) => v + 1);
   function navigate(view: View, caseId: string | null = null) {
     const next = locationFor(view, caseId);
@@ -282,7 +285,9 @@ function Workspace({
     (d.data?.counts.awaiting_approval ?? 0) +
     (d.data?.counts.awaiting_review ?? 0);
   return (
-    <div className={`app-shell ${menuOpen ? "navigation-open" : ""}`}>
+    <div
+      className={`app-shell ${menuOpen ? "navigation-open" : ""} ${PUBLIC_DEMO ? "public-demo" : ""}`}
+    >
       <a
         href="#main-content"
         className="skip-link"
@@ -340,7 +345,7 @@ function Workspace({
             <strong title={session.actor.tenant}>{session.actor.tenant}</strong>
             <small>Security workspace</small>
           </div>
-          <span className="badge">LAB</span>
+          <span className="badge">{PUBLIC_DEMO ? "DEMO" : "LAB"}</span>
         </div>
         <p className="nav-caption">Workspace</p>
         <nav aria-label="Main navigation">
@@ -377,18 +382,27 @@ function Workspace({
               className={`status-light ${d.data?.memory.in_sync ? "on" : ""}`}
             />
             <div>
-              <strong>FalkorDB memory</strong>
+              <strong>
+                {PUBLIC_DEMO ? "FalkorDB snapshot" : "FalkorDB memory"}
+              </strong>
               <small>
-                {d.data?.memory.in_sync
-                  ? "Connected & synchronized"
-                  : "Waiting for synchronization"}
+                {PUBLIC_DEMO
+                  ? "Recorded synthetic data"
+                  : d.data?.memory.in_sync
+                    ? "Connected & synchronized"
+                    : "Waiting for synchronization"}
               </small>
             </div>
           </div>
           <button
             className="account-button"
-            aria-label="Sign out of workspace"
-            title="Sign out of workspace"
+            aria-label={
+              PUBLIC_DEMO ? "Read-only demo viewer" : "Sign out of workspace"
+            }
+            title={
+              PUBLIC_DEMO ? "Read-only public demo" : "Sign out of workspace"
+            }
+            disabled={PUBLIC_DEMO}
             onClick={() => void logout()}
           >
             <span className="avatar">
@@ -396,13 +410,58 @@ function Workspace({
             </span>
             <span>
               {session.actor.role}
-              <small>Private session</small>
+              <small>{PUBLIC_DEMO ? "Public demo" : "Private session"}</small>
             </span>
-            <LogOut size={16} />
+            {!PUBLIC_DEMO && <LogOut size={16} />}
           </button>
         </div>
       </aside>
       <div className="workspace-main" inert={menuOpen}>
+        {PUBLIC_DEMO && (
+          <section
+            className="public-demo-banner"
+            aria-label="Public demo information"
+          >
+            <div>
+              <strong>Interactive UI demo</strong>
+              <p>
+                Explore recorded synthetic investigations. Live execution and
+                configuration changes are disabled.
+              </p>
+            </div>
+            <label>
+              Recorded state
+              <select
+                aria-label="Recorded demo state"
+                value={demoScenario()}
+                onChange={(e) => {
+                  window.location.assign(
+                    `${window.location.pathname}?scenario=${e.target.value}#/overview`,
+                  );
+                }}
+              >
+                <option value="r1">r1 · reviewed investigation</option>
+                <option value="r2">r2 · after the patch</option>
+              </select>
+            </label>
+            <div className="demo-links">
+              <a
+                href="https://youtu.be/Z8RMloVLsig"
+                target="_blank"
+                rel="noreferrer"
+              >
+                Watch the demo
+              </a>
+              <a
+                href="https://github.com/MokiMeow/arcloom#run-locally"
+                target="_blank"
+                rel="noreferrer"
+              >
+                Run the full application
+              </a>
+            </div>
+          </section>
+        )}
         <header className="topbar">
           <button
             id="navigation-toggle"
@@ -428,7 +487,11 @@ function Workspace({
           <div className="topbar-actions">
             <span className="badge scope-badge">
               <ShieldCheck size={12} />
-              {d.data?.scope_enabled ? "Authorized lab" : "Admission paused"}
+              {PUBLIC_DEMO
+                ? "Demo snapshot"
+                : d.data?.scope_enabled
+                  ? "Authorized lab"
+                  : "Admission paused"}
             </span>
             <span className="revision-pill">{d.data?.revision ?? "…"}</span>
             {canWrite && (
@@ -446,11 +509,13 @@ function Workspace({
         <div className="mode-bar">
           <span>
             <span className="dot" />
-            {d.data?.model.decision_model
-              ? `Cloudflare decision model · ${d.data.model.model}`
-              : d.data?.model.live_llm
-                ? `Live ${d.data.model.provider} adapter · ${d.data.model.model}`
-                : "Deterministic planner · no live LLM calls"}
+            {PUBLIC_DEMO
+              ? "Recorded UI demo · no live model or database calls"
+              : d.data?.model.decision_model
+                ? `Cloudflare decision model · ${d.data.model.model}`
+                : d.data?.model.live_llm
+                  ? `Live ${d.data.model.provider} adapter · ${d.data.model.model}`
+                  : "Deterministic planner · no live LLM calls"}
           </span>
           <span>Controlled synthetic fixtures · no production targets</span>
         </div>

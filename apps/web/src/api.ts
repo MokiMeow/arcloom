@@ -26,6 +26,10 @@ export async function request<T>(
   body?: unknown,
   signal?: AbortSignal,
 ): Promise<T> {
+  if (import.meta.env.VITE_PUBLIC_DEMO === "true") {
+    const { demoRequest } = await import("./demo/api");
+    return demoRequest<T>(path, method, signal);
+  }
   const headers: Record<string, string> = { Accept: "application/json" };
   if (method !== "GET") {
     headers["Content-Type"] = "application/json";

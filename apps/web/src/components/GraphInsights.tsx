@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { request, errorText } from "../api";
 import type { GraphNode } from "../types";
+import { PUBLIC_DEMO } from "../demoMode";
 import { ErrorNotice } from "./ui";
 
 type Requirement = { capability: string; before: string[]; after: string[] };
@@ -73,7 +74,9 @@ export function GraphInsights({
       <ErrorNotice message={error} />
       {busy && (
         <p className="muted" role="status">
-          Querying graph memory…
+          {PUBLIC_DEMO
+            ? "Reading the recorded snapshot…"
+            : "Querying graph memory…"}
         </p>
       )}
       <div className="insight-grid">
@@ -91,7 +94,9 @@ export function GraphInsights({
           }}
         >
           <label>
-            Search persisted graph memory
+            {PUBLIC_DEMO
+              ? "Filter recorded graph memory"
+              : "Search persisted graph memory"}
             <input
               aria-label="Search graph memory"
               value={text}
@@ -157,7 +162,9 @@ export function GraphInsights({
               })
             }
           >
-            Run withdrawal analysis
+            {PUBLIC_DEMO
+              ? "View recorded withdrawal analysis"
+              : "Run withdrawal analysis"}
           </button>
           <p className="muted">
             Read-only experiment. No graph nodes are deleted and no tests are
@@ -249,7 +256,9 @@ export function GraphInsights({
           })
         }
       >
-        Inspect native query plan and PageRank
+        {PUBLIC_DEMO
+          ? "Inspect recorded query plan and PageRank"
+          : "Inspect native query plan and PageRank"}
       </button>
       {diagnostics && (
         <details open>

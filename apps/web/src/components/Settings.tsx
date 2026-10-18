@@ -11,6 +11,7 @@ import type { Dashboard, Role } from "../types";
 import { ErrorNotice, SectionHead, formatDate } from "./ui";
 import { ProviderSettings } from "./ProviderSettings";
 import { GraphHostingSettings } from "./GraphHostingSettings";
+import { PUBLIC_DEMO } from "../demoMode";
 
 interface Member {
   id: string;
@@ -104,6 +105,26 @@ export function Settings({
         Configuration is enforcement, not a suggestion to the model.
       </SectionHead>
       <ErrorNotice message={error || members.error} />
+      {PUBLIC_DEMO && (
+        <section className="notice">
+          <div>
+            <strong>Recorded policy view</strong>
+            <p>
+              Explore this captured workspace's scope and budgets. The full
+              application also supports OpenAI, ChatGPT, Gemini, Anthropic and
+              Cloudflare planner settings, cloud graph connections and workspace
+              roles.
+            </p>
+            <a
+              href="https://github.com/MokiMeow/arcloom/blob/main/docs/provider-setup.md"
+              target="_blank"
+              rel="noreferrer"
+            >
+              View live configuration instructions
+            </a>
+          </div>
+        </section>
+      )}
       <div className="two-column">
         <div className="stack">
           <section className="panel padded">

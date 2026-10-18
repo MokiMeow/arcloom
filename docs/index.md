@@ -4,6 +4,9 @@ Arcloom turns reviewed synthetic security evidence into persistent investigation
 
 ## Try the workflow
 
+- [Public UI demo](ui-demo.md): an interactive recorded tour and the distinction from full hosted execution.
+- [Project origin](project-story.md): the human-defined idea and the decisions that shaped the product.
+
 - [Demo walkthrough](demo.md): confirm the gateway, investigate the invoice weakness, verify a chain and revalidate after a patch.
 - [Windows and development helpers](../scripts/README.md): run a local graph, configure credentials and execute browser tests.
 - [Provider setup](provider-setup.md): use deterministic mode or connect your own model provider.

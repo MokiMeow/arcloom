@@ -2,6 +2,7 @@ import { useState } from "react";
 import { CheckCheck, Download } from "lucide-react";
 import { errorText, request, useRemote } from "../api";
 import type { Agent, AuditEvent, Events } from "../types";
+import { PUBLIC_DEMO } from "../demoMode";
 import { Empty, ErrorNotice, SectionHead, ShortId, formatDate } from "./ui";
 
 import { DecisionReceipt } from "./DecisionReceipt";
@@ -73,7 +74,7 @@ export function Activity({
         action={
           <button className="button" onClick={() => void verify()}>
             <CheckCheck size={16} />
-            Verify audit chain
+            {PUBLIC_DEMO ? "View recorded audit check" : "Verify audit chain"}
           </button>
         }
       >
@@ -86,7 +87,7 @@ export function Activity({
           <CheckCheck size={18} />
           <span>
             {audit.valid
-              ? `Verified ${audit.checked} audit events.`
+              ? `${PUBLIC_DEMO ? "Recorded verification covered" : "Verified"} ${audit.checked} audit events.`
               : "Audit chain integrity failed."}
           </span>
           {audit.valid && (

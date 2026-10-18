@@ -12,7 +12,8 @@ remains part of operating the application.
 | Check | Recorded result |
 | --- | --- |
 | Full Python suite with actual local FalkorDB Server | **539 passed, 2 skipped** |
-| Frontend component and behavior tests | **97 passed** |
+| Frontend component and behavior tests | **105 passed**, including read-only demo boundaries |
+| Public UI demo, Chromium responsive scenarios | **5 passed** at 320, 390, 768, 1024 and 1440px; navigation, exports, graph tools, policy and historical cases |
 | Chromium browser scenarios, actual graph and separate HTTP lab | **8 passed** |
 | Ruff lint/format and frozen dependency lock check | Passed |
 | TypeScript, production build and Prettier | Passed |

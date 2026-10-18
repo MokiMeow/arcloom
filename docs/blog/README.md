@@ -2,7 +2,7 @@
 
 ![Arcloom: a chain test requires both supported capabilities](images/cover.png)
 
-*[Development and AI disclosure](https://github.com/MokiMeow/arcloom/blob/main/AI_USAGE.md).*
+*[Human direction and AI assistance](https://github.com/MokiMeow/arcloom/blob/main/AI_USAGE.md).*
 
 ## The moment after the handoff
 
@@ -13,6 +13,12 @@ That is the situation this post is about. Agent work is increasingly handed from
 We built **Arcloom** for Graph Hacks to explore a different inheritance: reviewed evidence, stored as a graph in FalkorDB, with relationships that say exactly which next experiment that evidence supports. Process 33588 read that graph and selected a test whose prerequisites were all satisfied. A second fresh process, 39736, later did the same for a chain that needed two findings. Neither saw the other's reasoning. They saw the same memory.
 
 Everything that follows runs against deliberately vulnerable synthetic HTTP services that we registered ourselves. Arcloom does not scan arbitrary targets, discover vulnerabilities in real companies, or patch anything. The question it explores is narrower and, we think, more transferable: how should one agent's verified work become a safe, inspectable starting point for the next?
+
+## Where the idea came from
+
+The starting point was the project owner's question about a narrowly scoped security report: if one researcher finds a weakness, how can a different investigator identify related questions while preserving the original attribution and the boundaries of the assessment?
+
+That human-defined flow shaped Arcloom's graph model, separate approval and review checkpoints, and the fresh-investigator demonstration. Product review then drove changes to readable graph relationships, inspectable evidence and the presentation. The [project story](https://github.com/MokiMeow/arcloom/blob/main/docs/project-story.md) explains those choices and the [assistance disclosure](https://github.com/MokiMeow/arcloom/blob/main/AI_USAGE.md) describes the supporting tools.
 
 [![Watch the narrated Arcloom demo](../media/demo-poster.png)](https://youtu.be/Z8RMloVLsig)
 
@@ -171,7 +177,7 @@ We recomputed that digest independently from the exported file, and it matched. 
 
 ## What the recorded checks establish
 
-The recorded checks for the submitted tree are 539 Python tests passed (2 skipped for Windows symlink privileges) against an actual FalkorDB server, 97 frontend tests, and 8 Chromium scenarios driving the real UI against a real graph and a separate HTTP lab. A dedicated integration test starts two operating-system processes and checks that the second continues from persisted graph records.
+The recorded checks for the submitted tree are 539 Python tests passed (2 skipped for Windows symlink privileges) against an actual FalkorDB server, 105 frontend tests, and 8 Chromium scenarios driving the real UI against a real graph and a separate HTTP lab. A dedicated integration test starts two operating-system processes and checks that the second continues from persisted graph records.
 
 The browser and live-provider harnesses exercised approval and review as the test owner; they did not supply independent human adjudication. Those checks show the exercised paths work. They are not a measure of model accuracy, a security certification, or evidence of production load. The vulnerabilities are seeded fixtures. Confidence values from models are decision signals, not probabilities that a weakness exists.
 
@@ -179,7 +185,7 @@ The browser and live-provider harnesses exercised approval and review as the tes
 
 The [README setup](https://github.com/MokiMeow/arcloom#run-locally) connects your own FalkorDB instance and starts the application and HTTP lab. The default deterministic planner needs no model API key.
 
-Start with the gateway report, approve its registered test, inspect its evidence and accept the review. Select **Start fresh investigator** and open the proposed invoice case's supporting path. After confirming that separate issue, repeat the handoff for the chain. Finally, advance to `r2` and compare current support with retained history. The useful thing to inspect is the reason each next step becomes available—or waits.
+Start with the gateway report, approve its registered test, inspect its evidence and accept the review. Select **Start fresh investigator** and open the proposed invoice case's supporting path. After confirming that separate issue, repeat the handoff for the chain. Finally, advance to `r2` and compare current support with retained history. The useful thing to inspect is the reason each next step becomes available - or waits.
 
 ## What we would carry into other agent systems
 

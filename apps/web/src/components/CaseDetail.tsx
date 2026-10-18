@@ -10,6 +10,7 @@ import {
 import { useEffect, useRef, useState } from "react";
 import { errorText, request, useRemote } from "../api";
 import type { Case, Role } from "../types";
+import { PUBLIC_DEMO } from "../demoMode";
 import {
   ErrorNotice,
   Loading,
@@ -82,6 +83,27 @@ export function CaseDetail({
       setActionError(errorText(e));
     } finally {
       setBusy(false);
+    }
+  }
+  async function downloadRecordedExport(
+    event: React.MouseEvent<HTMLAnchorElement>,
+  ) {
+    if (!PUBLIC_DEMO) return;
+    event.preventDefault();
+    try {
+      const value = await request(`/api/investigations/${id}/export`);
+      const url = URL.createObjectURL(
+        new Blob([JSON.stringify(value, null, 2)], {
+          type: "application/json",
+        }),
+      );
+      const link = document.createElement("a");
+      link.href = url;
+      link.download = `arcloom-recorded-demo-${id}.json`;
+      link.click();
+      setTimeout(() => URL.revokeObjectURL(url), 1000);
+    } catch (e) {
+      setActionError(errorText(e));
     }
   }
   if (loading && !c) return <Loading />;
@@ -207,9 +229,13 @@ export function CaseDetail({
                     onClick={() => void verifyEvidence(latest.evidence_hash)}
                   >
                     <ShieldCheck size={14} />
-                    {verified === latest.evidence_hash
-                      ? "Integrity verified against stored bytes"
-                      : "Verify evidence integrity"}
+                    {PUBLIC_DEMO
+                      ? verified === latest.evidence_hash
+                        ? "Recorded integrity check passed"
+                        : "View recorded integrity check"
+                      : verified === latest.evidence_hash
+                        ? "Integrity verified against stored bytes"
+                        : "Verify evidence integrity"}
                   </button>
                 </div>
                 <details className="details">
@@ -409,6 +435,7 @@ export function CaseDetail({
             <a
               className="button export-button"
               href={`/api/investigations/${id}/export`}
+              onClick={(event) => void downloadRecordedExport(event)}
             >
               <Download size={15} />
               Export investigation JSON

@@ -1017,7 +1017,11 @@ label > small {
   margin-left: auto;
 }
 .table-scroll {
+  position: relative;
   overflow: auto;
+}
+.main-content:focus {
+  outline: none;
 }
 table {
   border-collapse: collapse;
@@ -2719,4 +2723,68 @@ section[aria-label="Graph intelligence tools"] > .button {
 }
 .handoff-retry {
   padding: 0 28px 16px;
+}
+
+.public-demo-banner {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 16px 24px;
+  padding: 18px 32px;
+  background: #e9eee2;
+  border-bottom: 1px solid var(--line);
+}
+.public-demo-banner > div:first-child {
+  flex: 1 1 300px;
+}
+.public-demo-banner strong {
+  font-size: 15px;
+}
+.public-demo-banner p {
+  margin: 5px 0 0;
+  max-width: 580px;
+  font-size: 13px;
+  line-height: 1.55;
+}
+.public-demo-banner label {
+  margin: 0;
+  min-width: 0;
+  font-size: 12px;
+}
+.public-demo-banner select {
+  min-height: 44px;
+  max-width: 100%;
+  background: white;
+}
+.demo-links {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px 18px;
+  font-size: 13px;
+}
+.demo-links a {
+  color: var(--ink);
+  text-underline-offset: 4px;
+}
+.public-demo .scope-badge {
+  display: inline-flex;
+}
+.public-demo .account-button:disabled {
+  opacity: 1;
+  cursor: default;
+}
+@media (max-width: 650px) {
+  .public-demo-banner {
+    padding: 16px 20px;
+    gap: 12px;
+  }
+  .public-demo-banner > div:first-child {
+    flex-basis: 100%;
+  }
+  .public-demo-banner label {
+    width: 100%;
+  }
+  .public-demo-banner select {
+    width: 100%;
+  }
 }

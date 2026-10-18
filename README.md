@@ -2,7 +2,7 @@
 
 **Turn one reviewed finding into the next investigation.**
 
-Arcloom gives a fresh investigator a verified starting point. A researcher submits a report, a reviewer approves a bounded synthetic test, and accepted evidence becomes persistent FalkorDB memory. The next investigator follows the graph to a related test—with supporting findings, deployment revision and researcher attribution intact.
+Arcloom gives a fresh investigator a verified starting point. A researcher submits a report, a reviewer approves a bounded synthetic test, and accepted evidence becomes persistent FalkorDB memory. The next investigator follows the graph to a related test - with supporting findings, deployment revision and researcher attribution intact.
 
 [Watch the demo](https://youtu.be/Z8RMloVLsig) · [Engineering story](docs/blog/README.md) · [Quickstart](#run-locally) · [Documentation](docs/index.md)
 
@@ -146,8 +146,10 @@ Backend and browser integration checks require a real FalkorDB instance. [Testin
 | [Operations](docs/operations.md) and [security](docs/security.md) | Persistence, trust boundaries and deployment requirements |
 | [AI usage](AI_USAGE.md) | Development assistance and runtime planner disclosure |
 | [Engineering story](docs/blog/README.md) | The problem, graph query, implementation and recorded handoff |
+| [Project origin](docs/project-story.md) | The owner's idea, product direction and implementation decisions |
+| [Public UI demo](docs/ui-demo.md) | Recorded interactive tour, responsive checks and full hosting requirements |
 | [Demo assets](docs/media/README.md) | Narrated video, thumbnail and captions |
 
 `src/arcloom/` contains the trusted API, policy, graph tools and runner; `apps/web/` contains the React/TypeScript workspace; `tests/` contains policy, failure, HTTP, graph and process tests.
 
-Built for the FalkorDB hackathon: **Track 02 — Agent Memory and Coordination** is the primary fit; **Track 01 — Agents That Act on Connected Data** is secondary. The demonstration centers on persistent evidence and graph-guided continuation. [AI assistance is disclosed](AI_USAGE.md). Repository rights are governed by the existing [license](LICENSE).
+Built for the FalkorDB hackathon: **Track 02 - Agent Memory and Coordination** is the primary fit; **Track 01 - Agents That Act on Connected Data** is secondary. The demonstration centers on persistent evidence and graph-guided continuation. [AI assistance is disclosed](AI_USAGE.md). Repository rights are governed by the existing [license](LICENSE).
