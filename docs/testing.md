@@ -7,6 +7,8 @@ remains part of operating the application.
 
 [Documentation index](index.md) · [Run the demo](demo.md)
 
+GitHub-hosted validation is available on demand through **Actions → Arcloom validation → Run workflow**. Pushes and pull requests do not start hosted runs. The commands below reproduce the recorded checks locally.
+
 ## Recorded automated checks
 
 | Check | Recorded result |
