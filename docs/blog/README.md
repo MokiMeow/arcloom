@@ -192,4 +192,3 @@ Start with the gateway report, approve its registered test, inspect its evidence
 The gateway, invoice and chain are small synthetic fixtures. The shape of the problem is not: one context ends, another begins, and the second one should start from what was actually verified, know why it may act next, and notice when that support has expired.
 
 The code, setup instructions, graph model and queries are in the [Arcloom repository](https://github.com/MokiMeow/arcloom). The project was built for [WeMakeDevs Graph Hacks](https://www.wemakedevs.org/hackathons/falkordb), primarily for the Agent Memory and Coordination track, with Agents That Act on Connected Data as a second fit.
-
