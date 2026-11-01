@@ -10,7 +10,10 @@ interface GraphEndpoint {
   ssl: boolean;
 }
 interface GraphHostingStatus {
-  current: GraphEndpoint & { prefix: string };
+  current: Omit<GraphEndpoint, "port"> & {
+    port: number | null;
+    prefix: string;
+  };
   target: (GraphEndpoint & { password_configured: boolean }) | null;
   staged: boolean;
 }
@@ -122,12 +125,13 @@ function GraphHostingForm({ revision }: { revision: number }) {
           <div>
             <dt>Current graph server</dt>
             <dd>
-              {state.current.host}:{state.current.port}
+              {state.current.host}
+              {state.current.port !== null && `:${state.current.port}`}
             </dd>
           </div>
           <div>
             <dt>Current graph prefix</dt>
-            <dd>{state.current.prefix}</dd>
+            <dd>{state.current.prefix || "Private workspace namespace"}</dd>
           </div>
           <div>
             <dt>Staged cloud target</dt>

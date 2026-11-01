@@ -5,13 +5,19 @@ import {
   Play,
   GitCommitHorizontal,
   Copy,
+  Gauge,
+  Sparkles,
+  Database,
+  Users,
+  UserRound,
 } from "lucide-react";
 import { errorText, request, useRemote } from "../api";
-import type { Dashboard, Role } from "../types";
+import type { Dashboard, Role, Session } from "../types";
 import { ErrorNotice, SectionHead, formatDate } from "./ui";
 import { ProviderSettings } from "./ProviderSettings";
 import { GraphHostingSettings } from "./GraphHostingSettings";
 import { PUBLIC_DEMO } from "../demoMode";
+import { AccountSettings } from "./AccountSettings";
 
 interface Member {
   id: string;
@@ -24,11 +30,15 @@ export function Settings({
   revision,
   changed,
   role,
+  session,
+  onSessionUpdated,
 }: {
   dashboard: Dashboard;
   revision: number;
   changed: () => void;
   role: Role;
+  session?: Session;
+  onSessionUpdated?: (session: Session) => void;
 }) {
   const [reason, setReason] = useState("");
   const [busy, setBusy] = useState(false);
@@ -96,14 +106,84 @@ export function Settings({
       setError("Clipboard unavailable. Select and copy the token manually.");
     }
   }
+  const scopeExpired = d.scope_expires_at <= d.at;
+  function jumpTo(event: React.MouseEvent<HTMLAnchorElement>, id: string) {
+    event.preventDefault();
+    const section = document.getElementById(id);
+    section?.focus({ preventScroll: true });
+    section?.scrollIntoView({ block: "start" });
+  }
+  const sections = [
+    ...(session && onSessionUpdated && !PUBLIC_DEMO
+      ? [
+          {
+            id: "settings-account",
+            label: "Account & sign-in",
+            detail: "Your identity & password",
+            icon: UserRound,
+          },
+        ]
+      : []),
+    {
+      id: "settings-scope",
+      label: "Scope & revision",
+      detail: "Assessment boundaries",
+      icon: ShieldCheck,
+    },
+    {
+      id: "settings-budgets",
+      label: "Budgets",
+      detail: "Execution & model limits",
+      icon: Gauge,
+    },
+    {
+      id: "settings-providers",
+      label: "Model providers",
+      detail: "Investigator configuration",
+      icon: Sparkles,
+    },
+    ...(role === "admin"
+      ? [
+          {
+            id: "settings-graph",
+            label: "Graph hosting",
+            detail: "Connection & migration",
+            icon: Database,
+          },
+          {
+            id: "settings-team",
+            label: "Team access",
+            detail: "Members & permissions",
+            icon: Users,
+          },
+        ]
+      : []),
+  ];
   return (
     <>
-      <SectionHead
-        tag="Workspace / Policy"
-        title="Make the boundaries explicit."
-      >
-        Configuration is enforcement, not a suggestion to the model.
+      <SectionHead tag="Workspace / Policy" title="Workspace policy">
+        Manage execution boundaries, model providers and workspace access.
       </SectionHead>
+      <nav
+        className="settings-navigation"
+        aria-label="Workspace policy sections"
+      >
+        {sections.map((section) => (
+          <a
+            key={section.id}
+            className="settings-navigation-card"
+            aria-label={section.label}
+            href={`#${section.id}`}
+            onClick={(event) => jumpTo(event, section.id)}
+          >
+            <section.icon size={19} aria-hidden="true" />
+            <span className="settings-navigation-copy">
+              <strong>{section.label}</strong>
+              <small>{section.detail}</small>
+            </span>
+          </a>
+        ))}
+      </nav>
       <ErrorNotice message={error || members.error} />
       {PUBLIC_DEMO && (
         <section className="notice">
@@ -125,11 +205,35 @@ export function Settings({
           </div>
         </section>
       )}
-      <div className="two-column">
+      {session && onSessionUpdated && !PUBLIC_DEMO && (
+        <AccountSettings
+          actor={session.actor}
+          onSessionUpdated={onSessionUpdated}
+        />
+      )}
+      <div className="two-column settings-layout">
         <div className="stack">
-          <section className="panel padded">
-            <p className="eyebrow">Authorized assessment</p>
-            <h2>Only our controlled synthetic lab.</h2>
+          <section
+            className="panel padded settings-section"
+            id="settings-scope"
+            tabIndex={-1}
+            aria-labelledby="settings-scope-heading"
+          >
+            <div className="settings-section-heading">
+              <div>
+                <p className="eyebrow">Authorized assessment</p>
+                <h2 id="settings-scope-heading">Scope & deployment revision</h2>
+              </div>
+              <span
+                className={`badge ${scopeExpired ? "state-denied" : d.scope_enabled ? "state-confirmed" : "state-inconclusive"}`}
+              >
+                {scopeExpired
+                  ? "Expired"
+                  : d.scope_enabled
+                    ? "Admission open"
+                    : "Admission paused"}
+              </span>
+            </div>
             <p className="body-copy">
               No arbitrary URLs, generated shell commands, production
               credentials, or external scans. All execution tools are registered
@@ -153,7 +257,11 @@ export function Settings({
               <div>
                 <dt>Admission</dt>
                 <dd>
-                  {d.scope_enabled ? "Open, subject to approval" : "Paused"}
+                  {scopeExpired
+                    ? "Assessment expired · new execution blocked"
+                    : d.scope_enabled
+                      ? "Open, subject to approval"
+                      : "Paused"}
                 </dd>
               </div>
             </dl>
@@ -207,9 +315,14 @@ export function Settings({
               </>
             )}
           </section>
-          <section className="panel padded">
-            <p className="eyebrow">Execution and model budgets</p>
-            <h2>Bounded work. Visible cost inputs.</h2>
+          <section
+            className="panel padded settings-section"
+            id="settings-budgets"
+            tabIndex={-1}
+            aria-labelledby="settings-budgets-heading"
+          >
+            <p className="eyebrow">Usage & limits</p>
+            <h2 id="settings-budgets-heading">Execution & model budgets</h2>
             <div className="budget-row">
               <span>Lab executions</span>
               <strong>
@@ -217,6 +330,7 @@ export function Settings({
               </strong>
             </div>
             <progress
+              aria-label="Lab execution budget"
               value={d.budget.executions}
               max={d.budget.execution_limit}
             />
@@ -227,6 +341,7 @@ export function Settings({
               </strong>
             </div>
             <progress
+              aria-label="Model-call reservation budget"
               value={d.budget.model_calls}
               max={d.budget.model_call_limit}
             />
@@ -235,19 +350,34 @@ export function Settings({
               counts are provider-reported; no currency savings are assumed.
             </p>
           </section>
+          {role === "admin" && (
+            <div id="settings-graph" className="settings-section" tabIndex={-1}>
+              <GraphHostingSettings revision={revision} role={role} />
+            </div>
+          )}
         </div>
         <div className="stack">
-          <ProviderSettings
-            model={d.model}
-            revision={revision}
-            changed={changed}
-            role={role}
-          />
-          <GraphHostingSettings revision={revision} role={role} />
+          <div
+            id="settings-providers"
+            className="settings-section"
+            tabIndex={-1}
+          >
+            <ProviderSettings
+              model={d.model}
+              revision={revision}
+              changed={changed}
+              role={role}
+            />
+          </div>
           {role === "admin" && (
-            <section className="panel padded">
-              <p className="eyebrow">Team access</p>
-              <h2>A role for each responsibility.</h2>
+            <section
+              className="panel padded settings-section"
+              id="settings-team"
+              tabIndex={-1}
+              aria-labelledby="settings-team-heading"
+            >
+              <p className="eyebrow">Identity & permissions</p>
+              <h2 id="settings-team-heading">Team access</h2>
               <div className="member-list">
                 {members.data?.items.map((m) => (
                   <div key={m.id}>
@@ -257,14 +387,16 @@ export function Settings({
                         {m.role} · {m.active ? "active" : "revoked"}
                       </small>
                     </span>
-                    {m.active && !m.id.startsWith("admin_") && (
-                      <button
-                        className="text-button danger-text"
-                        onClick={() => void revoke(m.id)}
-                      >
-                        Revoke
-                      </button>
-                    )}
+                    {m.active &&
+                      m.id !== session?.actor.id &&
+                      !m.id.startsWith("admin_") && (
+                        <button
+                          className="text-button danger-text"
+                          onClick={() => void revoke(m.id)}
+                        >
+                          Revoke
+                        </button>
+                      )}
                   </div>
                 ))}
               </div>

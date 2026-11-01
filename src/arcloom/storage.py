@@ -48,6 +48,11 @@ CREATE TABLE IF NOT EXISTS sessions(
  token_hash TEXT PRIMARY KEY, member_id TEXT NOT NULL REFERENCES members(id),
  csrf_hash TEXT NOT NULL, expires_at REAL NOT NULL, created_at REAL NOT NULL
 );
+CREATE TABLE IF NOT EXISTS accounts(
+ member_id TEXT PRIMARY KEY REFERENCES members(id), email TEXT NOT NULL UNIQUE,
+ password_hash TEXT NOT NULL, recovery_hash TEXT NOT NULL,
+ password_changed_at REAL NOT NULL
+);
 CREATE TABLE IF NOT EXISTS rate_limits(
  key TEXT PRIMARY KEY, window_start REAL NOT NULL, count INTEGER NOT NULL
 );

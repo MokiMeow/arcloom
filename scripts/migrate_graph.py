@@ -24,6 +24,7 @@ from dotenv import dotenv_values
 from arcloom.config import Settings
 from arcloom.graph import KINDS, RELATIONS, FalkorGraph
 from arcloom.intelligence import GraphIntelligence
+from arcloom.private_storage import MAGIC, PrivateStorage
 from arcloom.storage import Store, canonical
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -51,7 +52,21 @@ def load_target(
         raise MigrationError("Target configuration must be an existing git-ignored private file.")
     try:
         # Deliberately do not inherit graph credentials from environment or source.
-        values = dotenv_values(path, interpolate=False)
+        if path.read_bytes().startswith(MAGIC):
+            from io import StringIO
+
+            # A private account's staged connection lives below its own
+            # credential directory, while the journal being migrated can
+            # remain in the server's shared data directory.
+            credential_settings = (
+                source.model_copy(update={"data_dir": path.parent.parent})
+                if path.parent.name == "private"
+                else source
+            )
+            content, _ = PrivateStorage(credential_settings).read(path, "graph-target")
+            values = dotenv_values(stream=StringIO(content.decode("utf-8")), interpolate=False)
+        else:
+            values = dotenv_values(path, interpolate=False)
         required = ("HOST", "PORT", "USERNAME", "PASSWORD", "SSL")
         if any(not values.get("ARCLOOM_GRAPH_" + key) for key in required):
             raise MigrationError(

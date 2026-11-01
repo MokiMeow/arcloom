@@ -1,7 +1,7 @@
 // @vitest-environment jsdom
 import { act, cleanup, renderHook, waitFor } from "@testing-library/react";
 import { afterEach, describe, expect, it, vi } from "vitest";
-import { ApiError, request, useRemote } from "./api";
+import { ApiError, request, setCsrf, useRemote } from "./api";
 
 afterEach(() => {
   cleanup();
@@ -42,30 +42,69 @@ describe("API responses", () => {
     }
   });
 
-  it.each(["/api/auth/session", "/api/auth/login"])(
-    "keeps expected authentication failures local to %s",
-    async (path) => {
-      vi.stubGlobal(
-        "fetch",
-        vi
-          .fn()
-          .mockResolvedValue(
-            Response.json(
-              { error: { code: "unauthorized", message: "Not authenticated" } },
-              { status: 401 },
-            ),
+  it.each([
+    "/api/auth/session",
+    "/api/auth/login",
+    "/api/auth/register",
+    "/api/auth/recover",
+  ])("keeps expected authentication failures local to %s", async (path) => {
+    vi.stubGlobal(
+      "fetch",
+      vi
+        .fn()
+        .mockResolvedValue(
+          Response.json(
+            { error: { code: "unauthorized", message: "Not authenticated" } },
+            { status: 401 },
           ),
+        ),
+    );
+    const expired = vi.fn();
+    window.addEventListener("arcloom:session-expired", expired);
+    try {
+      await expect(request(path)).rejects.toMatchObject({ status: 401 });
+      expect(expired).not.toHaveBeenCalled();
+    } finally {
+      window.removeEventListener("arcloom:session-expired", expired);
+    }
+  });
+
+  it("keeps an incorrect password-change proof local while expiring an invalid session", async () => {
+    const fetcher = vi
+      .fn()
+      .mockResolvedValueOnce(
+        Response.json(
+          {
+            error: {
+              code: "invalid_credentials",
+              message: "Current password is incorrect",
+            },
+          },
+          { status: 401 },
+        ),
+      )
+      .mockResolvedValueOnce(
+        Response.json(
+          { error: { code: "unauthorized", message: "Session expired" } },
+          { status: 401 },
+        ),
       );
-      const expired = vi.fn();
-      window.addEventListener("arcloom:session-expired", expired);
-      try {
-        await expect(request(path)).rejects.toMatchObject({ status: 401 });
-        expect(expired).not.toHaveBeenCalled();
-      } finally {
-        window.removeEventListener("arcloom:session-expired", expired);
-      }
-    },
-  );
+    vi.stubGlobal("fetch", fetcher);
+    const expired = vi.fn();
+    window.addEventListener("arcloom:session-expired", expired);
+    try {
+      await expect(
+        request("/api/auth/password", "POST", {}),
+      ).rejects.toMatchObject({ code: "invalid_credentials" });
+      expect(expired).not.toHaveBeenCalled();
+      await expect(
+        request("/api/auth/password", "POST", {}),
+      ).rejects.toMatchObject({ code: "unauthorized" });
+      expect(expired).toHaveBeenCalledOnce();
+    } finally {
+      window.removeEventListener("arcloom:session-expired", expired);
+    }
+  });
 
   it("does not end a newer session when an aborted request returns a late 401", async () => {
     const pending = deferred<Response>();
@@ -85,6 +124,29 @@ describe("API responses", () => {
       await expect(result).rejects.toMatchObject({ status: 401 });
       expect(expired).not.toHaveBeenCalled();
     } finally {
+      window.removeEventListener("arcloom:session-expired", expired);
+    }
+  });
+
+  it("does not expire a renewed password session when an older request returns 401", async () => {
+    const pending = deferred<Response>();
+    vi.stubGlobal("fetch", vi.fn().mockReturnValueOnce(pending.promise));
+    const expired = vi.fn();
+    window.addEventListener("arcloom:session-expired", expired);
+    try {
+      setCsrf("previous-session-csrf");
+      const oldRequest = request("/api/dashboard");
+      setCsrf("renewed-session-csrf");
+      pending.resolve(
+        Response.json(
+          { error: { code: "unauthorized", message: "Old session expired" } },
+          { status: 401 },
+        ),
+      );
+      await expect(oldRequest).rejects.toMatchObject({ status: 401 });
+      expect(expired).not.toHaveBeenCalled();
+    } finally {
+      setCsrf(null);
       window.removeEventListener("arcloom:session-expired", expired);
     }
   });

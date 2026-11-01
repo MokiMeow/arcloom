@@ -1,9 +1,12 @@
 """Dependency composition. Tests inject explicit ports, never a runtime fallback."""
 
 import json
+import threading
 import time
 from contextlib import suppress
 from dataclasses import asdict
+
+from pydantic import SecretStr
 
 from arcloom.auth import Auth
 from arcloom.catalog import ASSETS, REVISIONS, TESTS
@@ -15,7 +18,7 @@ from arcloom.graph import FalkorGraph, GraphPort, Projector, seed_graph
 from arcloom.intelligence import GraphIntelligence
 from arcloom.providers import ProviderManager
 from arcloom.runner import HttpRunner, RunnerPort
-from arcloom.storage import Store
+from arcloom.storage import Store, digest
 from arcloom.worker import Worker
 from arcloom.workflow import Cases
 
@@ -55,6 +58,63 @@ class Runtime:
             snapshot_planner_factory=None if planner_factory else self.providers.planner,
         )
         self.worker = Worker(self.store, settings, self.projector, self.runner, self.evidence)
+        self._tenant_lock = threading.RLock()
+        self._tenant_services = {}
+
+    def _services_for(self, actor: Actor):
+        if actor.tenant == self.settings.tenant:
+            return self.settings, self.providers, self.chatgpt, self.discovery
+        if not self.store.one("SELECT id FROM tenants WHERE id=?", (actor.tenant,)):
+            raise DomainError("forbidden", "Workspace access is unavailable", 403)
+        with self._tenant_lock:
+            if actor.tenant not in self._tenant_services:
+                # Graph/runner transport is shared infrastructure. Provider
+                # selection, reusable credentials and OAuth identity never are.
+                settings = self.settings.model_copy(
+                    update={
+                        "tenant": actor.tenant,
+                        "data_dir": self.settings.data_dir / "tenants" / digest(actor.tenant),
+                        "provider": "deterministic",
+                        "model": "",
+                        "model_api_key": SecretStr(""),
+                        "cloudflare_account_id": "",
+                        "cloudflare_wrangler_until": None,
+                        "chatgpt_profile_id": "",
+                        "admin_token": SecretStr(""),
+                    },
+                    deep=True,
+                )
+                settings._shared_graph_infrastructure = True
+                settings._cloudflare_environment_credential = False
+                settings._model_deadline = None
+                from arcloom.chatgpt_auth import ChatGPTAuth
+
+                chatgpt = ChatGPTAuth(settings)
+                providers = ProviderManager(settings, self.store, chatgpt)
+                discovery = Discovery(
+                    self.store,
+                    settings,
+                    self.graph,
+                    self.projector,
+                    self.evidence,
+                    lambda: providers.planner(providers.snapshot()),
+                    settings_factory=providers.snapshot,
+                    snapshot_planner_factory=providers.planner,
+                )
+                self._tenant_services[actor.tenant] = (settings, providers, chatgpt, discovery)
+            return self._tenant_services[actor.tenant]
+
+    def settings_for(self, actor: Actor):
+        return self._services_for(actor)[0]
+
+    def providers_for(self, actor: Actor):
+        return self._services_for(actor)[1]
+
+    def chatgpt_for(self, actor: Actor):
+        return self._services_for(actor)[2]
+
+    def discovery_for(self, actor: Actor):
+        return self._services_for(actor)[3]
 
     def initialize(self):
         if len(self.settings.runner_secret.get_secret_value()) < 32:
@@ -78,7 +138,7 @@ class Runtime:
                 self.intelligence.prepare(self.settings.tenant)
 
     def dashboard(self, actor: Actor) -> dict:
-        provider = self.providers.snapshot()
+        provider = self.providers_for(actor).snapshot()
         tenant = self.store.one("SELECT * FROM tenants WHERE id=?", (actor.tenant,))
         budget = self.store.one(
             "SELECT * FROM budgets WHERE tenant=? AND revision=?",
@@ -158,4 +218,7 @@ class Runtime:
     def close(self):
         self.worker.stop()
         self.chatgpt.close()
+        with self._tenant_lock:
+            for _, _, chatgpt, _ in self._tenant_services.values():
+                chatgpt.close()
         self.graph.close()

@@ -11,7 +11,6 @@ import json
 import os
 import re
 import secrets
-import tempfile
 import threading
 import time
 import uuid
@@ -24,6 +23,7 @@ import httpx
 import jwt
 
 from arcloom.domain import DomainError
+from arcloom.private_storage import PrivateStorage
 
 ISSUER = "https://auth.openai.com"
 AUTHORIZE = ISSUER + "/api/accounts/authorize"
@@ -108,6 +108,7 @@ class ChatGPTAuth:
     def __init__(self, settings, transport: httpx.BaseTransport | None = None):
         self.settings, self.transport = settings, transport
         self.credential_path = Path(settings.data_dir) / "private" / "chatgpt-credentials.bin"
+        self._private = PrivateStorage(settings)
         self._mutex = threading.RLock()
         self._pending = None
         self._server = None
@@ -191,18 +192,16 @@ class ChatGPTAuth:
                 "profiles": {},
             }
         try:
-            if self.credential_path.stat().st_size > 1024 * 1024:
-                raise ValueError("Oversized credentials")
-            data = self.credential_path.read_bytes()
+            data, legacy = self._private.read(self.credential_path, "chatgpt-credentials")
             if os.name == "nt":
                 if not data.startswith(b"DPAPI1\n"):
                     raise ValueError("Unprotected credentials")
                 data = _dpapi(data[7:], decrypt=True)
-            elif self.credential_path.stat().st_mode & 0o077:
-                raise ValueError("Credential permissions")
             value = json.loads(data)
             if value.get("version") != 1 or not isinstance(value.get("profiles"), dict):
                 raise ValueError("Credential format")
+            if legacy:
+                self._write(value)
             return value
         except (OSError, ValueError, TypeError, AttributeError):
             raise DomainError(
@@ -213,20 +212,7 @@ class ChatGPTAuth:
         data = json.dumps(value, ensure_ascii=True, separators=(",", ":")).encode()
         if os.name == "nt":
             data = b"DPAPI1\n" + _dpapi(data)
-        descriptor, temporary = tempfile.mkstemp(
-            prefix=".chatgpt-", dir=self.credential_path.parent
-        )
-        try:
-            if os.name != "nt":
-                os.fchmod(descriptor, 0o600)
-            with os.fdopen(descriptor, "wb") as handle:
-                handle.write(data)
-                handle.flush()
-                os.fsync(handle.fileno())
-            os.replace(temporary, self.credential_path)
-        finally:
-            if os.path.exists(temporary):
-                os.unlink(temporary)
+        self._private.write(self.credential_path, "chatgpt-credentials", data)
 
     @staticmethod
     def _connected(profile):

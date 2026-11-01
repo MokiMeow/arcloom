@@ -1,32 +1,27 @@
 @font-face {
-  font-family: "DM Sans";
+  font-family: "Manrope";
   font-style: normal;
-  font-weight: 400 700;
+  font-weight: 200 800;
   font-display: swap;
-  src: url("/fonts/dm-sans-latin.woff2") format("woff2");
-}
-@font-face {
-  font-family: "Newsreader";
-  font-style: normal;
-  font-weight: 400 500;
-  font-display: swap;
-  src: url("/fonts/newsreader-latin.woff2") format("woff2");
+  src: url("/fonts/manrope-latin-variable.woff2") format("woff2");
 }
 :root {
   color-scheme: light;
-  --canvas: #f6f5f1;
+  --canvas: #fafbfc;
   --white: #fff;
-  --ink: #24312c;
-  --muted: #5d6b62;
-  --green: #29634f;
-  --red: #a43a2f;
-  --accent: #b54b2a;
-  --accent-soft: #f8eee6;
-  --line: #e5e5dd;
-  --line-strong: #cbd0c7;
-  --sidebar: #202d29;
-  --sidebar-muted: #a9b7b0;
-  --font: "DM Sans", "Segoe UI", sans-serif;
-  --display: "Newsreader", Georgia, serif;
+  --ink: #171a1c;
+  --muted: #647078;
+  --green: #137b66;
+  --red: #b43e4d;
+  --accent: #286f98;
+  --accent-soft: #eaf5fc;
+  --line: #e6e9eb;
+  --line-strong: #d5dadd;
+  --sidebar: #fff;
+  --sidebar-muted: #647078;
+  --font: "Manrope", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  --display: var(--font);
   --mono: "SFMono-Regular", Consolas, "Liberation Mono", monospace;
+  --ease: cubic-bezier(0.22, 1, 0.36, 1);
+  --radius: 12px;
 }

@@ -7,6 +7,7 @@ import {
 } from "lucide-react";
 import type { ReactNode } from "react";
 import type { CaseState } from "../types";
+import { FullIdentifier } from "./FullIdentifier";
 
 export const labels: Record<CaseState, string> = {
   awaiting_approval: "Awaiting approval",
@@ -90,12 +91,9 @@ export function SectionHead({
     </div>
   );
 }
+/** Compatibility export: identifiers are displayed and copied in full. */
 export function ShortId({ value }: { value: string }) {
-  return (
-    <code title={value}>
-      {value.split("_")[0]}_{value.split("_")[1]?.slice(0, 7) ?? value}
-    </code>
-  );
+  return <FullIdentifier value={value} />;
 }
 export function OpenButton({
   children,

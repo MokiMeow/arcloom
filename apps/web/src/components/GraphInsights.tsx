@@ -218,7 +218,7 @@ export function GraphInsights({
                 <code className="break-all">{p.path.join(" → ")}</code>
               </p>
             ))}
-            <pre>
+            <pre tabIndex={0} aria-label="Graph query and diagnostics">
               {JSON.stringify(
                 analysis.tests.map((t) => ({
                   test: t.test_id,
@@ -239,7 +239,9 @@ export function GraphInsights({
             {Object.entries(analysis.queries).map(([name, q]) => (
               <div key={name}>
                 <h3>{name}</h3>
-                <pre>{q}</pre>
+                <pre tabIndex={0} aria-label="Graph query and diagnostics">
+                  {q}
+                </pre>
               </div>
             ))}
           </details>
@@ -267,7 +269,9 @@ export function GraphInsights({
             GRAPH.EXPLAIN builds the plan without executing the
             candidate-selection query.
           </p>
-          <pre>{diagnostics.plan}</pre>
+          <pre tabIndex={0} aria-label="Graph query and diagnostics">
+            {diagnostics.plan}
+          </pre>
           <h3>Dependency importance</h3>
           {diagnostics.centrality.map((a) => (
             <p key={a.asset_id}>

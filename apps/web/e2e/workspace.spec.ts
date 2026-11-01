@@ -25,6 +25,10 @@ type BrowserToolTestState = Window & {
 const token = "arcloom-e2e-only-" + "t".repeat(48);
 async function login(page: Page) {
   await page.goto("/");
+  await page.getByRole("button", { name: "Sign in", exact: true }).click();
+  await page
+    .getByText("Advanced workspace token access", { exact: true })
+    .click();
   await page.getByLabel("Workspace access token").fill(token);
   await page.getByRole("button", { name: "Enter workspace" }).click();
   await expect(
@@ -300,6 +304,10 @@ test("investigation links survive reload and browser history", async ({
 
 test("invalid access token stays outside the workspace", async ({ page }) => {
   await page.goto("/");
+  await page.getByRole("button", { name: "Sign in", exact: true }).click();
+  await page
+    .getByText("Advanced workspace token access", { exact: true })
+    .click();
   await page
     .getByLabel("Workspace access token")
     .fill("unrecognized-" + "x".repeat(48));
@@ -355,6 +363,10 @@ test("one-time member tokens survive refresh and viewer actions stay read-only",
   const value = (await issuedToken.textContent())!;
   expect(value.length).toBeGreaterThanOrEqual(32);
   await page.getByRole("button", { name: "Sign out of workspace" }).click();
+  await page.getByRole("button", { name: "Sign in", exact: true }).click();
+  await page
+    .getByText("Advanced workspace token access", { exact: true })
+    .click();
   await page.getByLabel("Workspace access token").fill(value);
   await page.getByRole("button", { name: "Enter workspace" }).click();
   await page.getByRole("button", { name: "Overview", exact: true }).click();

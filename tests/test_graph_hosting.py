@@ -1,10 +1,10 @@
 import json
 
 import pytest
-from dotenv import dotenv_values
 from fastapi.testclient import TestClient
 
 from arcloom.api import create_app
+from arcloom.graph_hosting import _read
 from tests.conftest import ADMIN
 
 
@@ -32,11 +32,13 @@ def test_graph_target_is_private_staging_not_activation(runtime):
         assert result["staged"] and result["target"]["password_configured"]
         assert "private-cloud-password" not in json.dumps(result)
         assert result["current"]["host"] == runtime.settings.graph_host
-        target = dotenv_values(
-            runtime.settings.data_dir / "private" / "cloud.env", interpolate=False
+        target = _read(runtime.settings)
+        assert target.password == "private-cloud-password"
+        assert target.host == "example.falkordb.cloud"
+        assert (
+            b"private-cloud-password"
+            not in (runtime.settings.data_dir / "private" / "cloud.env").read_bytes()
         )
-        assert target["ARCLOOM_GRAPH_PASSWORD"] == "private-cloud-password"
-        assert target["ARCLOOM_GRAPH_HOST"] == "example.falkordb.cloud"
         assert "private-cloud-password" not in json.dumps(runtime.store.all("SELECT * FROM events"))
 
 
@@ -90,10 +92,7 @@ def test_graph_target_password_round_trip(runtime, password):
             json=connection(password=password),
         )
         assert response.status_code == 200
-        values = dotenv_values(
-            runtime.settings.data_dir / "private" / "cloud.env", interpolate=False
-        )
-        assert values["ARCLOOM_GRAPH_PASSWORD"] == password
+        assert _read(runtime.settings).password == password
 
 
 @pytest.mark.parametrize(

@@ -6,7 +6,9 @@ Arcloom executes a reviewed synthetic fixture catalog. No endpoint accepts an ar
 
 ## Controls
 
-- Workspace-bound roles and high-entropy access tokens stored as hashes.
+- Separate private workspaces for individual email/password accounts; workspace-bound roles and high-entropy service tokens stored as hashes.
+- Salted Argon2id passwords, bounded concurrent hashing, login/recovery rate limits, single-use hashed recovery codes and session rotation.
+- Tenant-specific provider/OAuth/graph-staging credentials protected by authenticated encryption, with no inherited operator provider credentials.
 - HttpOnly, SameSite=Strict browser sessions, CSRF validation and exact-origin mutation checks.
 - Session expiry, token-rotation invalidation, member revocation and execution-time reviewer rechecks.
 - Fixed Cypher templates, allowlisted labels/relationships and workspace-derived graph names.
@@ -26,6 +28,8 @@ The application and lab runner share a signing secret. HMAC receipts establish i
 A local hash chain detects inconsistent audit history relative to a trusted head. A host administrator able to replace the complete history can replace that chain as well. Export and independently anchor its head when you need protection against wholesale replacement.
 
 The container network separates the reviewed lab; it is not a sandbox contract for arbitrary generated exploitation code. A broader enterprise integration needs signed asset inventory, per-target authorization, approved safe tests, egress enforcement, scoped credentials and explicit assessment approval. [Product direction](agent-expansion.md) describes a bounded extension.
+
+See [account and credential storage](authentication.md) for exact password, recovery, key-management and migration behavior. The application does not encrypt the entire journal or evidence volume; deployment-level durable storage protection remains separate.
 
 ## Deployment requirements
 

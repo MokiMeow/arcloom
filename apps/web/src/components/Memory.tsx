@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useId, useMemo, useState } from "react";
 import {
   Background,
   BaseEdge,
@@ -13,12 +13,13 @@ import {
 } from "@xyflow/react";
 import type { Edge, EdgeProps, Node } from "@xyflow/react";
 import "@xyflow/react/dist/style.css";
-import { Database } from "lucide-react";
+import { ArrowUpRight, Database, Search } from "lucide-react";
 import { useRemote } from "../api";
 import type { CasePage, GraphData, GraphNode } from "../types";
 import { Empty, ErrorNotice, Loading, SectionHead } from "./ui";
 
 import { GraphInsights } from "./GraphInsights";
+import { FullIdentifier } from "./FullIdentifier";
 import {
   GRAPH_CARD_HEIGHT,
   GRAPH_CARD_WIDTH,
@@ -61,6 +62,156 @@ function RelationshipEdge({
   );
 }
 const edgeTypes = { relationship: RelationshipEdge };
+
+export function MemoryRecordBrowser({
+  records,
+  selectedId,
+  selectRecord,
+  focused,
+}: {
+  records: GraphNode[];
+  selectedId?: string;
+  selectRecord: (record: GraphNode) => void;
+  focused: boolean;
+}) {
+  const browserId = useId();
+  const [query, setQuery] = useState("");
+  const [kind, setKind] = useState("");
+  const [page, setPage] = useState(0);
+  const kinds = [...new Set(records.map((record) => record.kind))].sort();
+  const normalized = query.trim().toLowerCase();
+  const matching = records.filter(
+    (record) =>
+      (!kind || kind === record.kind) &&
+      `${record.kind} ${record.id} ${String(record.props.title ?? "")}`
+        .toLowerCase()
+        .includes(normalized),
+  );
+  const pageSize = 25;
+  const currentPage = Math.min(
+    page,
+    Math.max(0, Math.ceil(matching.length / pageSize) - 1),
+  );
+  const visible = matching.slice(
+    currentPage * pageSize,
+    (currentPage + 1) * pageSize,
+  );
+  return (
+    <section className="panel graph-record-browser" aria-label="Graph records">
+      <header className="panel-head">
+        <div>
+          <h2>Browse graph records</h2>
+          <p className="muted">
+            A readable alternative to the canvas. Select a record to inspect its
+            persisted properties and relationships.
+          </p>
+        </div>
+        <span className="badge">
+          {focused ? "Focused investigation" : "Whole workspace"}
+        </span>
+      </header>
+      <div className="graph-record-filters">
+        <label className="search">
+          <Search size={16} aria-hidden="true" />
+          <input
+            aria-label="Filter graph records"
+            value={query}
+            onChange={(event) => {
+              setQuery(event.target.value);
+              setPage(0);
+            }}
+            placeholder="Filter by title, type or record ID"
+          />
+        </label>
+        <select
+          aria-label="Filter graph record type"
+          value={kind}
+          onChange={(event) => {
+            setKind(event.target.value);
+            setPage(0);
+          }}
+        >
+          <option value="">Every record type</option>
+          {kinds.map((value) => (
+            <option key={value} value={value}>
+              {value}
+            </option>
+          ))}
+        </select>
+        <span className="muted" role="status">
+          {matching.length} of {records.length} records
+        </span>
+      </div>
+      {visible.length ? (
+        <ul className="graph-record-list">
+          {visible.map((record, index) => (
+            <li key={record.id}>
+              <button
+                type="button"
+                className="graph-record-row"
+                aria-label={`Inspect record ${record.kind}: ${String(record.props.title ?? record.id)}`}
+                aria-pressed={record.id === selectedId}
+                aria-describedby={`${browserId}-record-${index}`}
+                aria-controls="memory-inspector"
+                onClick={() => selectRecord(record)}
+              >
+                <span className="graph-record-type">{record.kind}</span>
+                <span className="graph-record-copy">
+                  <strong>{String(record.props.title ?? record.id)}</strong>
+                  <code
+                    className="full-identifier-value"
+                    id={`${browserId}-record-${index}`}
+                  >
+                    {record.id}
+                  </code>
+                </span>
+                {record.kind === "Finding" && (
+                  <span className="badge">
+                    {record.props.current === true
+                      ? "Verified · current"
+                      : "Historical · revalidate"}
+                  </span>
+                )}
+                <ArrowUpRight size={16} aria-hidden="true" />
+              </button>
+            </li>
+          ))}
+        </ul>
+      ) : (
+        <Empty title="No matching graph records">
+          Try another title, type or record ID. Filtering does not change the
+          graph or its prerequisites.
+        </Empty>
+      )}
+      {matching.length > pageSize && (
+        <div className="pagination">
+          <button
+            type="button"
+            className="button"
+            disabled={currentPage === 0}
+            onClick={() => setPage(currentPage - 1)}
+          >
+            Previous records
+          </button>
+          <span>
+            {currentPage * pageSize + 1}–
+            {Math.min((currentPage + 1) * pageSize, matching.length)} of{" "}
+            {matching.length}
+          </span>
+          <button
+            type="button"
+            className="button"
+            disabled={(currentPage + 1) * pageSize >= matching.length}
+            onClick={() => setPage(currentPage + 1)}
+          >
+            Next records
+          </button>
+        </div>
+      )}
+    </section>
+  );
+}
+
 function GraphViewControls({ selectedId }: { selectedId?: string }) {
   const { fitBounds, getNodes, getEdges, setCenter, viewportInitialized } =
     useReactFlow<Node, MemoryEdge>();
@@ -139,8 +290,20 @@ export function Memory({
     0,
   );
   const [focus, setFocus] = useState("");
-  const [selected, setSelected] = useState<GraphNode | null>(null);
+  const [selection, setSelected] = useState<GraphNode | null>(null);
+  // Resolve current data on every refresh; do not retain stale finding properties.
+  const selected =
+    graph.data?.nodes.find((record) => record.id === selection?.id) ?? null;
   const [initialized, setInitialized] = useState(false);
+  const focusedCase = cases.data?.items.find((item) => item.id === focus);
+  function inspectRecord(record: GraphNode) {
+    setSelected(record);
+    requestAnimationFrame(() => {
+      const inspector = document.getElementById("memory-inspector");
+      inspector?.focus({ preventScroll: true });
+      inspector?.scrollIntoView({ block: "nearest" });
+    });
+  }
   useEffect(() => {
     if (!initialized && cases.data) {
       setFocus(cases.data.items.find((c) => c.path.length > 0)?.id ?? "");
@@ -187,13 +350,15 @@ export function Memory({
         style: {
           width: GRAPH_CARD_WIDTH,
           height: GRAPH_CARD_HEIGHT,
-          border: `1px solid ${current ? "#087c68" : n.kind === "Hypothesis" ? "#b88a3b" : "#cdd5d0"}`,
-          borderRadius: 7,
+          border: `1px solid ${current ? "#078564" : n.kind === "Finding" ? "#c08b40" : n.kind === "Hypothesis" ? "#818cf8" : "#cbd5e1"}`,
+          borderRadius: 6,
           background: current
-            ? "#f1fbf6"
-            : n.kind === "Hypothesis"
-              ? "#fffbf0"
-              : "#ffffff",
+            ? "#f0fdf7"
+            : n.kind === "Finding"
+              ? "#fffbeb"
+              : n.kind === "Hypothesis"
+                ? "#f5f5ff"
+                : "#ffffff",
           textAlign: "left",
           padding: 0,
         },
@@ -204,7 +369,7 @@ export function Memory({
     const edges: MemoryEdge[] = geometry.edges.map((route) => {
       const highlighted =
         selected?.id === route.source || selected?.id === route.target;
-      const stroke = highlighted ? "#176b58" : "#91a29a";
+      const stroke = highlighted ? "#6366f1" : "#94a3b8";
       return {
         id: route.id,
         source: route.source,
@@ -220,7 +385,7 @@ export function Memory({
         },
       };
     });
-    return { nodes, edges };
+    return { nodes, edges, records: sourceNodes };
   }, [graph.data, cases.data, focus, selected?.id]);
   return (
     <>
@@ -266,9 +431,22 @@ export function Memory({
               </select>
             </label>
           </div>
+          {focusedCase && (
+            <div className="graph-focus-title">
+              <span>Focused investigation</span>
+              <strong>{focusedCase.title}</strong>
+              <FullIdentifier
+                value={focusedCase.id}
+                label="focused investigation ID"
+              />
+            </div>
+          )}
           <p className="graph-help">
-            Relationships have their own lanes. Select a card to inspect it; use
-            Read labels for full size, then pan to follow the path.
+            {focus
+              ? "Showing the selected investigation’s supporting path. "
+              : "Showing the loaded workspace graph. "}
+            Use Read labels for full size, or browse the searchable record list
+            below. Selecting a record does not change eligibility.
           </p>
           <div className="graph-layout">
             <div
@@ -311,21 +489,34 @@ export function Memory({
                 <GraphViewControls selectedId={selected?.id} />
               </ReactFlow>
             </div>
-            <aside className="panel padded graph-inspector">
+            <aside
+              className="panel padded graph-inspector"
+              id="memory-inspector"
+              tabIndex={-1}
+              aria-label="Memory inspector"
+            >
               <p className="eyebrow">Memory inspector</p>
               {selected ? (
                 <>
                   <span className="badge">{selected.kind}</span>
                   <h2>{String(selected.props.title ?? selected.id)}</h2>
-                  <code className="break-all">{selected.id}</code>
+                  <FullIdentifier value={selected.id} label="graph record ID" />
                   <dl className="property-list">
                     {Object.entries(selected.props).map(([k, v]) => (
                       <div key={k}>
                         <dt>{k.replaceAll("_", " ")}</dt>
                         <dd>
-                          {typeof v === "object"
-                            ? JSON.stringify(v)
-                            : String(v)}
+                          {typeof v === "string" &&
+                          /(^id$|_id$|hash|sha256)/i.test(k) ? (
+                            <FullIdentifier
+                              value={v}
+                              label={k.replaceAll("_", " ")}
+                            />
+                          ) : typeof v === "object" ? (
+                            JSON.stringify(v)
+                          ) : (
+                            String(v)
+                          )}
                         </dd>
                       </div>
                     ))}
@@ -345,9 +536,14 @@ export function Memory({
                           >
                             <strong>{e.relation}</strong>
                             <span>
-                              {e.source === selected.id ? "To" : "From"}{" "}
-                              {e.source === selected.id ? e.target : e.source}
+                              {e.source === selected.id ? "To" : "From"}
                             </span>
+                            <FullIdentifier
+                              value={
+                                e.source === selected.id ? e.target : e.source
+                              }
+                              label="related graph record ID"
+                            />
                           </li>
                         ))}
                     </ul>
@@ -373,6 +569,13 @@ export function Memory({
               </div>
             </aside>
           </div>
+          <MemoryRecordBrowser
+            key={focus}
+            records={filtered.records}
+            selectedId={selected?.id}
+            selectRecord={inspectRecord}
+            focused={Boolean(focus)}
+          />
           <GraphInsights
             key={revision}
             nodes={graph.data.nodes}
@@ -384,7 +587,9 @@ export function Memory({
               All required capabilities must have current, verified support.
               Tests already attempted at this revision are excluded.
             </p>
-            <pre>{graph.data.selection_query}</pre>
+            <pre tabIndex={0} aria-label="Graph query and diagnostics">
+              {graph.data.selection_query}
+            </pre>
             <p className="muted">
               Bound parameters: revision and source_finding_id. Graph names come
               from the authenticated workspace, never from the agent.

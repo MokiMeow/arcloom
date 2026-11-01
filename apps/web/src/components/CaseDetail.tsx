@@ -6,16 +6,20 @@ import {
   CheckCircle2,
   Clock3,
   Fingerprint,
+  FileText,
+  Play,
+  Circle,
+  CircleCheck,
 } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import { errorText, request, useRemote } from "../api";
 import type { Case, Role } from "../types";
 import { PUBLIC_DEMO } from "../demoMode";
+import { FullIdentifier } from "./FullIdentifier";
 import {
   ErrorNotice,
   Loading,
   SectionHead,
-  ShortId,
   StateBadge,
   formatDate,
 } from "./ui";
@@ -78,11 +82,11 @@ export function CaseDetail({
     setActionError(null);
     try {
       await request("/api/evidence/" + hash);
-      setVerified(hash);
+      if (active.current) setVerified(hash);
     } catch (e) {
-      setActionError(errorText(e));
+      if (active.current) setActionError(errorText(e));
     } finally {
-      setBusy(false);
+      if (active.current) setBusy(false);
     }
   }
   async function downloadRecordedExport(
@@ -114,6 +118,93 @@ export function CaseDetail({
   const latest = c.runs?.at(-1);
   const hasDecision =
     c.state === "awaiting_approval" || c.state === "awaiting_review";
+  const approval = c.approvals?.at(-1);
+  const executionPending = ["awaiting_approval", "queued", "running"].includes(
+    c.state,
+  );
+  const retainedEvidence = Boolean(
+    latest && (executionPending || c.state === "denied"),
+  );
+  // Retries retain earlier runs and reviews. A review belongs to a specific
+  // run; its presence must not complete a new attempt's human checkpoint.
+  const review = latest
+    ? c.reviews?.find((entry) => entry.run_id === latest.id)
+    : undefined;
+  const reviewComplete =
+    !executionPending &&
+    c.state !== "denied" &&
+    c.state !== "awaiting_review" &&
+    Boolean(review);
+  const stages = [
+    {
+      label: c.origin === "report" ? "Report" : "Hypothesis",
+      detail: c.origin === "report" ? "Recorded" : "Proposed",
+      status: "complete",
+      icon: FileText,
+    },
+    {
+      label: "Execution approval",
+      detail:
+        c.state === "awaiting_approval"
+          ? "Needs a reviewer"
+          : approval?.decision === "deny" || c.state === "denied"
+            ? "Denied"
+            : approval?.decision === "approve"
+              ? "Approved"
+              : "Not recorded",
+      status:
+        c.state === "awaiting_approval"
+          ? "current"
+          : approval?.decision === "deny" || c.state === "denied"
+            ? "blocked"
+            : approval?.decision === "approve"
+              ? "complete"
+              : "waiting",
+      icon: ShieldCheck,
+    },
+    {
+      label: "Runner observation",
+      detail:
+        c.state === "running"
+          ? "Running in lab"
+          : c.state === "queued"
+            ? "Queued"
+            : retainedEvidence
+              ? "Previous attempt retained"
+              : latest
+                ? "Evidence recorded"
+                : "Not executed",
+      status:
+        c.state === "running" || c.state === "queued"
+          ? "current"
+          : !retainedEvidence && latest
+            ? "complete"
+            : "waiting",
+      icon: Play,
+    },
+    {
+      label: "Evidence review",
+      detail:
+        c.state === "awaiting_review"
+          ? "Needs a reviewer"
+          : executionPending || c.state === "denied"
+            ? "Waiting for a new observation"
+            : reviewComplete && review?.decision === "accept"
+              ? "Outcome accepted"
+              : reviewComplete && review?.decision === "reject"
+                ? "Conclusion rejected"
+                : reviewComplete && review?.decision === "needs_info"
+                  ? "More evidence needed"
+                  : "Not reviewed",
+      status:
+        c.state === "awaiting_review"
+          ? "current"
+          : reviewComplete
+            ? "complete"
+            : "waiting",
+      icon: Fingerprint,
+    },
+  ];
   return (
     <>
       <button className="text-button back" onClick={back}>
@@ -121,12 +212,11 @@ export function CaseDetail({
         All investigations
       </button>
       <SectionHead
-        tag={`${c.origin} / ${c.asset_id} / ${c.revision}`}
+        tag={`Investigations / ${c.origin} / ${c.revision}`}
         title={c.title}
         action={<StateBadge state={c.state} stale={c.stale} />}
       >
-        <ShortId value={c.id} /> <span className="inline-separator">/</span>{" "}
-        Original attribution: {c.researcher}
+        Registered test: {c.test_id}
       </SectionHead>
       <ErrorNotice message={error || actionError} />
       {c.stale && (
@@ -138,46 +228,115 @@ export function CaseDetail({
           </span>
         </div>
       )}
-      <div className="case-meta">
-        <span>
-          <ShieldCheck size={15} />
-          Registered synthetic test
-        </span>
-        <span>
-          <Fingerprint size={15} />
-          Evidence + reviewer required
-        </span>
-        <span>Created {formatDate(c.created_at)}</span>
-      </div>
-      <div className="two-column detail-grid">
+      <ol className="case-progress" aria-label="Investigation stages">
+        {stages.map((stage, index) => (
+          <li
+            key={stage.label}
+            className={`case-progress-step case-progress-${stage.status}`}
+            aria-current={stage.status === "current" ? "step" : undefined}
+          >
+            <span className="case-progress-icon" aria-hidden="true">
+              {stage.status === "complete" ? (
+                <CircleCheck size={18} />
+              ) : stage.status === "waiting" ? (
+                <Circle size={18} />
+              ) : (
+                <stage.icon size={18} />
+              )}
+            </span>
+            <span>
+              <strong>{stage.label}</strong>
+              <small>{stage.detail}</small>
+            </span>
+            <span className="case-progress-number" aria-hidden="true">
+              0{index + 1}
+            </span>
+          </li>
+        ))}
+      </ol>
+      <dl className="case-record-metadata">
+        <div className="case-record-identifier">
+          <dt>Investigation ID</dt>
+          <dd>
+            <FullIdentifier value={c.id} label="investigation ID" />
+          </dd>
+        </div>
+        {c.finding && (
+          <div className="case-record-identifier">
+            <dt>Finding ID</dt>
+            <dd>
+              <FullIdentifier value={c.finding.id} label="finding ID" />
+            </dd>
+          </div>
+        )}
+        <div>
+          <dt>Asset</dt>
+          <dd>{c.asset_id}</dd>
+        </div>
+        <div>
+          <dt>Original researcher</dt>
+          <dd>{c.researcher}</dd>
+        </div>
+        <div>
+          <dt>Deployment revision</dt>
+          <dd>
+            {c.revision}
+            {c.stale ? " · historical" : " · current"}
+          </dd>
+        </div>
+        <div>
+          <dt>Created</dt>
+          <dd>{formatDate(c.created_at)}</dd>
+        </div>
+        <div>
+          <dt>Updated</dt>
+          <dd>{formatDate(c.updated_at ?? c.created_at)}</dd>
+        </div>
+      </dl>
+      <div className="two-column detail-grid case-workbench">
         <div className="stack">
-          <section className="panel padded">
-            <p className="eyebrow">Why this investigation?</p>
-            <h2>Follow the evidence, not the conversation.</h2>
-            <p className="body-copy">{c.reason}</p>
-            {c.path.length > 0 && (
-              <div className="path-list">
-                {c.path.map((e, i) => (
-                  <div className="path-row" key={i}>
-                    <code>{e.source}</code>
-                    <span>{e.relation}</span>
-                    <code>{e.target}</code>
+          <section className="panel case-context-panel">
+            <header className="panel-head">
+              <h2>Investigation context</h2>
+              <span className="badge">{c.origin}</span>
+            </header>
+            <div className="padded">
+              <p className="body-copy">{c.reason}</p>
+              {c.supports.length > 0 && (
+                <p className="muted">
+                  {c.supports.length} supporting finding(s) · investigation
+                  depth {c.depth}
+                </p>
+              )}
+              {c.reports?.map((r) => (
+                <div className="report-copy" key={r.id}>
+                  <strong>Report from {r.researcher}</strong>
+                  <p>{r.description}</p>
+                </div>
+              ))}
+              {c.path.length > 0 && (
+                <details className="details case-support-path">
+                  <summary>
+                    Supporting graph path · {c.path.length} relationships
+                  </summary>
+                  <div className="path-list">
+                    {c.path.map((e, i) => (
+                      <div className="path-row" key={i}>
+                        <FullIdentifier
+                          value={e.source}
+                          label="supporting path source ID"
+                        />
+                        <span>{e.relation}</span>
+                        <FullIdentifier
+                          value={e.target}
+                          label="supporting path target ID"
+                        />
+                      </div>
+                    ))}
                   </div>
-                ))}
-              </div>
-            )}
-            {c.supports.length > 0 && (
-              <p className="muted">
-                {c.supports.length} supporting finding(s) · investigation depth{" "}
-                {c.depth}
-              </p>
-            )}
-            {c.reports?.map((r) => (
-              <div className="report-copy" key={r.id}>
-                <strong>Report from {r.researcher}</strong>
-                <p>{r.description}</p>
-              </div>
-            ))}
+                </details>
+              )}
+            </div>
           </section>
           <section className="panel">
             <header className="panel-head">
@@ -186,8 +345,33 @@ export function CaseDetail({
                 {c.runs?.length ?? 0} recorded attempts
               </span>
             </header>
+            {(executionPending ||
+              (retainedEvidence && c.state === "denied")) && (
+              <div className="notice case-attempt-status" role="status">
+                <Clock3 size={18} />
+                <div>
+                  <strong>
+                    {c.state === "awaiting_approval"
+                      ? "This attempt needs a new execution approval."
+                      : c.state === "queued"
+                        ? "The newly approved attempt is queued."
+                        : c.state === "running"
+                          ? "The current attempt is running in the lab."
+                          : "No new execution was authorized."}
+                  </strong>
+                  <p>
+                    {latest
+                      ? "The receipt below is previous-attempt evidence. It does not complete this attempt’s observation or evidence review."
+                      : "A new observation must be recorded before its evidence can be reviewed."}
+                  </p>
+                </div>
+              </div>
+            )}
             {latest ? (
               <div className="padded">
+                {retainedEvidence && (
+                  <p className="eyebrow">Previous-attempt evidence</p>
+                )}
                 <div className="receipt-title">
                   <span className={`outcome outcome-${latest.outcome}`}>
                     {latest.outcome.replaceAll("_", " ")}
@@ -214,15 +398,29 @@ export function CaseDetail({
                         <strong>
                           {String(o.label ?? o.assertion ?? "Observation")}
                         </strong>
-                        <code>{o.path}</code>
+                        <code className="full-identifier-value">{o.path}</code>
+                        {o.body_sha256 && (
+                          <details className="observation-digest">
+                            <summary>Response body SHA-256</summary>
+                            <FullIdentifier
+                              value={o.body_sha256}
+                              label="response body SHA-256 digest"
+                            />
+                          </details>
+                        )}
                       </div>
                       <span className="badge">HTTP {o.status}</span>
                     </div>
                   ))}
                 </div>
                 <div className="hash-box">
-                  <label>SHA-256 artifact digest</label>
-                  <code>{latest.evidence_hash}</code>
+                  <span className="hash-label">SHA-256 artifact digest</span>
+                  <FullIdentifier
+                    value={latest.evidence_hash}
+                    label="artifact SHA-256 digest"
+                  />
+                  <span className="hash-label">Run ID</span>
+                  <FullIdentifier value={latest.id} label="run ID" />
                   <button
                     className="text-button"
                     disabled={busy}
@@ -240,16 +438,29 @@ export function CaseDetail({
                 </div>
                 <details className="details">
                   <summary>Inspect the signed receipt</summary>
-                  <pre>{JSON.stringify(latest.receipt, null, 2)}</pre>
+                  <pre
+                    className="receipt-json"
+                    tabIndex={0}
+                    aria-label="Signed receipt JSON"
+                  >
+                    {JSON.stringify(latest.receipt, null, 2)}
+                  </pre>
                 </details>
                 {(c.runs?.length ?? 0) > 1 && (
                   <details className="details">
                     <summary>Earlier attempts</summary>
                     {c.runs?.slice(0, -1).map((r) => (
-                      <p key={r.id}>
-                        <ShortId value={r.id} /> · {r.outcome} ·{" "}
-                        {formatDate(r.created_at)}
-                      </p>
+                      <div className="earlier-attempt" key={r.id}>
+                        <FullIdentifier value={r.id} label="earlier run ID" />
+                        <p>
+                          {r.outcome.replaceAll("_", " ")} ·{" "}
+                          {formatDate(r.created_at)}
+                        </p>
+                        <FullIdentifier
+                          value={r.evidence_hash}
+                          label="earlier artifact SHA-256 digest"
+                        />
+                      </div>
                     ))}
                   </details>
                 )}
@@ -257,7 +468,11 @@ export function CaseDetail({
             ) : (
               <div className="empty small">
                 <ShieldCheck size={25} />
-                <h3>No test has run</h3>
+                <h3>
+                  {c.state === "running" || c.state === "queued"
+                    ? "No observation recorded yet"
+                    : "No test has run"}
+                </h3>
                 <p>
                   An explicit approval must precede a lab execution. A report or
                   graph path cannot establish a finding.
@@ -267,8 +482,21 @@ export function CaseDetail({
           </section>
         </div>
         <aside className="stack">
-          <section className="panel padded review-panel">
-            <p className="eyebrow">Human checkpoint</p>
+          <section className="panel padded review-panel case-checkpoint">
+            <div className="case-checkpoint-status">
+              <p className="eyebrow">
+                {c.state === "awaiting_approval"
+                  ? "01 / Execution approval"
+                  : c.state === "awaiting_review"
+                    ? "02 / Evidence review"
+                    : "Human checkpoint"}
+              </p>
+              {hasDecision && (
+                <span className="badge checkpoint-pending">
+                  {canReview ? "Your decision required" : "Reviewer required"}
+                </span>
+              )}
+            </div>
             <h2>
               {c.state === "awaiting_approval"
                 ? "Authorize a bounded test."
@@ -422,9 +650,7 @@ export function CaseDetail({
                     <div>
                       <strong>{r.decision}</strong>
                       <p>{r.reason}</p>
-                      <small>
-                        <ShortId value={r.actor} />
-                      </small>
+                      <FullIdentifier value={r.actor} label="reviewer ID" />
                     </div>
                   </div>
                 ))}

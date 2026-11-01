@@ -1,5 +1,11 @@
 // @vitest-environment jsdom
-import { cleanup, fireEvent, render, screen } from "@testing-library/react";
+import {
+  cleanup,
+  fireEvent,
+  render,
+  screen,
+  within,
+} from "@testing-library/react";
 import "@testing-library/jest-dom/vitest";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { Settings } from "./Settings";
@@ -108,5 +114,124 @@ describe("member token clipboard", () => {
     expect(await screen.findByRole("alert")).toHaveTextContent(
       /copy the token manually/,
     );
+  });
+});
+
+describe("workspace policy sections", () => {
+  it("offers personal account settings without granting token or workspace administration", () => {
+    vi.stubGlobal("fetch", vi.fn().mockReturnValue(new Promise(() => {})));
+    render(
+      <Settings
+        dashboard={dashboard}
+        revision={0}
+        changed={() => {}}
+        role="viewer"
+        session={{
+          actor: {
+            id: "account_viewer",
+            tenant: "private_workspace",
+            role: "viewer",
+            name: "Casey",
+            email: "casey@example.com",
+            password_account: true,
+          },
+          csrf: "session-csrf",
+        }}
+        onSessionUpdated={vi.fn()}
+      />,
+    );
+    const navigation = screen.getByRole("navigation", {
+      name: "Workspace policy sections",
+    });
+    expect(
+      within(navigation).getByRole("link", { name: "Account & sign-in" }),
+    ).toHaveAttribute("href", "#settings-account");
+    expect(
+      screen.getByRole("heading", { name: "Account & sign-in" }),
+    ).toBeVisible();
+    expect(screen.getByText("casey@example.com")).toBeVisible();
+    expect(document.getElementById("settings-team")).toBeNull();
+    expect(document.getElementById("settings-graph")).toBeNull();
+    expect(
+      screen.queryByRole("button", { name: "Create access token" }),
+    ).toBeNull();
+  });
+  it("only links to sections available for the current role", () => {
+    vi.stubGlobal("fetch", vi.fn().mockReturnValue(new Promise(() => {})));
+    render(
+      <Settings
+        dashboard={dashboard}
+        revision={0}
+        changed={() => {}}
+        role="viewer"
+      />,
+    );
+    const navigation = screen.getByRole("navigation", {
+      name: "Workspace policy sections",
+    });
+    const links = within(navigation).getAllByRole("link");
+    expect(links).toHaveLength(3);
+    for (const link of links)
+      expect(document.querySelector(link.getAttribute("href")!)).not.toBeNull();
+    expect(
+      within(navigation).queryByRole("link", { name: "Graph hosting" }),
+    ).not.toBeInTheDocument();
+    expect(
+      within(navigation).queryByRole("link", { name: "Team access" }),
+    ).not.toBeInTheDocument();
+    expect(document.getElementById("settings-team")).toBeNull();
+    expect(document.getElementById("settings-graph")).toBeNull();
+  });
+  it("focuses and scrolls to a section without replacing the workspace hash route", () => {
+    vi.stubGlobal("fetch", vi.fn().mockReturnValue(new Promise(() => {})));
+    const originalHash = window.location.hash;
+    window.location.hash = "#/settings";
+    render(
+      <Settings
+        dashboard={dashboard}
+        revision={0}
+        changed={() => {}}
+        role="admin"
+      />,
+    );
+    const navigation = screen.getByRole("navigation", {
+      name: "Workspace policy sections",
+    });
+    expect(within(navigation).getAllByRole("link")).toHaveLength(5);
+    const team = document.getElementById("settings-team")!;
+    const scroll = vi.fn();
+    team.scrollIntoView = scroll;
+    fireEvent.click(
+      within(navigation).getByRole("link", { name: "Team access" }),
+    );
+    expect(team).toHaveFocus();
+    expect(scroll).toHaveBeenCalledWith({ block: "start" });
+    expect(window.location.hash).toBe("#/settings");
+    window.location.hash = originalHash;
+  });
+  it("derives expiry from the dashboard timestamp rather than the browser clock", () => {
+    vi.stubGlobal("fetch", vi.fn().mockReturnValue(new Promise(() => {})));
+    const properties = {
+      revision: 0,
+      changed: () => {},
+      role: "viewer" as const,
+    };
+    const { rerender } = render(
+      <Settings
+        {...properties}
+        dashboard={{ ...dashboard, scope_expires_at: 100, at: 50 }}
+      />,
+    );
+    expect(screen.getByText("Admission open")).toBeInTheDocument();
+    rerender(
+      <Settings
+        {...properties}
+        dashboard={{ ...dashboard, scope_expires_at: 100, at: 101 }}
+      />,
+    );
+    expect(
+      screen.getByText("Assessment expired · new execution blocked"),
+    ).toBeInTheDocument();
+    expect(screen.queryByText("Admission open")).not.toBeInTheDocument();
   });
 });

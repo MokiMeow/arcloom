@@ -16,8 +16,9 @@
     "test": "vitest run src",
     "e2e": "playwright test",
     "e2e:demo": "playwright test --config playwright.demo.config.ts",
-    "format": "prettier --write src e2e e2e-demo *.ts *.json index.html",
-    "format:check": "prettier --check src e2e e2e-demo *.ts *.json index.html"
+    "format": "prettier --write src e2e e2e-demo e2e-accounts *.ts *.json index.html",
+    "format:check": "prettier --check src e2e e2e-demo e2e-accounts *.ts *.json index.html",
+    "e2e:accounts": "playwright test --config playwright.accounts.config.ts"
   },
   "dependencies": {
     "@xyflow/react": "12.12.0",

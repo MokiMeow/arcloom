@@ -23,6 +23,8 @@ class Settings(BaseSettings):
     graph_ssl: bool = False
     graph_prefix: str = "arcloom_v1"
     admin_token: SecretStr = SecretStr("")
+    signup_enabled: bool = True
+    private_encryption_key: SecretStr = SecretStr("")
     tenant: str = "lab-01"
     cookie_secure: bool = False
     allowed_hosts: list[str] = ["localhost", "127.0.0.1", "testserver"]
@@ -55,6 +57,7 @@ class Settings(BaseSettings):
     cloudflare_wrangler_until: int | None = None
     _cloudflare_environment_credential: bool = PrivateAttr(default=False)
     _model_deadline: float | None = PrivateAttr(default=None)
+    _shared_graph_infrastructure: bool = PrivateAttr(default=False)
     chatgpt_profile_id: str = ""
     clef_min_confidence: float = Field(0.70, ge=0, le=1)
     clef_min_margin: float = Field(0.15, ge=0, le=1)

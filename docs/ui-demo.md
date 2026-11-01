@@ -1,4 +1,4 @@
-# Public UI demo
+# Archived recorded UI tour
 
 **[Open the interactive Arcloom demo](https://arcloomdemo.vercel.app)** · [Watch the narrated walkthrough](https://youtu.be/Z8RMloVLsig)
 
@@ -22,7 +22,18 @@ npm --prefix apps/web run build:demo
 npm --prefix apps/web run preview:demo -- --port 4173
 ```
 
-For Vercel, set the project root to `apps/web`. Its `vercel.json` selects the demo build and `dist-demo` output. The ordinary build retains its separate `dist` directory. No backend or provider credentials are required for this static deployment.
+The default `vercel.json` now builds the ordinary application (`npm run build`,
+`dist`), which contains no recorded snapshots. Serving that frontend alone does
+not supply authentication or persistence: account access requires a same-origin
+persistent API, journal/evidence storage, runner and FalkorDB as described in
+[operations](operations.md). Do not present a static-only deployment as the full
+account service.
+
+An operator who explicitly wants the archived recorded tour can select
+`vercel.recorded-tour.json` with the Vercel CLI `--local-config` option. That
+configuration builds `dist-demo` and needs no backend; it remains read-only and
+contains the labelled historical records. This source change does not update an
+already published deployment.
 
 Run `npm --prefix apps/web run e2e:demo` to exercise navigation, exports, graph tools, policy and historical cases at 320, 390, 768, 1024 and 1440px. These browser tests use a separate static server and require no backend credentials.
 

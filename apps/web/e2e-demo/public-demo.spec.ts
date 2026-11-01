@@ -36,10 +36,10 @@ for (const width of [320, 390, 768, 1024, 1440]) {
       .click();
     expect((await handoff).suggestedFilename()).toMatch(/\.json$/);
     await navigate("Investigations");
-    await expect(page.locator(".row-title").first()).toBeVisible();
+    await expect(page.locator(".row-title:visible").first()).toBeVisible();
     await contained();
     await page
-      .locator(".row-title")
+      .locator(".row-title:visible")
       .filter({ hasText: "Invoice service" })
       .first()
       .click();
@@ -121,7 +121,7 @@ for (const width of [320, 390, 768, 1024, 1440]) {
     ).toBeVisible();
     await navigate("Investigations");
     await page
-      .locator(".row-title")
+      .locator(".row-title:visible")
       .filter({ hasText: "Invoice service" })
       .first()
       .click();

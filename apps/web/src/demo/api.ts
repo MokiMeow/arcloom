@@ -49,7 +49,7 @@ export async function demoRequest<T>(
       (item) =>
         (!state || item.state === state) &&
         (!q ||
-          `${item.title} ${item.id} ${item.asset_id}`
+          `${item.title} ${item.id} ${item.asset_id} ${item.test_id}`
             .toLowerCase()
             .includes(q)),
     );

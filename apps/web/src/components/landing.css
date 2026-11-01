@@ -1,0 +1,2936 @@
+.sky-landing {
+  --sl-ink: #111923;
+  --sl-muted: #4c6171;
+  --sl-blue: #2769dd;
+  --sl-sky: #b7def4;
+  --sl-white: #fff;
+  --sl-line: #d8e3ea;
+  --sl-font: var(--font);
+  width: 100%;
+  padding: 16px;
+  background: #fafcfd;
+  color: var(--sl-ink);
+  font-family: var(--sl-font);
+  line-height: 1.6;
+  isolation: isolate;
+  color-scheme: light;
+}
+.sky-landing *,
+.sky-landing *::before,
+.sky-landing *::after {
+  box-sizing: border-box;
+}
+.sky-landing h1,
+.sky-landing h2,
+.sky-landing h3,
+.sky-landing h4,
+.sky-landing p {
+  margin: 0;
+  color: inherit;
+  font-family: inherit;
+  font-style: normal;
+}
+.sky-landing a {
+  color: inherit;
+  text-decoration: none;
+}
+.sky-landing button,
+.sky-landing input {
+  font: inherit;
+}
+.sky-landing button,
+.sky-landing a,
+.sky-landing summary,
+.sky-landing input {
+  touch-action: manipulation;
+}
+.sky-landing button:focus-visible,
+.sky-landing a:focus-visible,
+.sky-landing summary:focus-visible,
+.sky-landing input:focus-visible,
+.sky-landing [tabindex]:focus-visible {
+  outline: 3px solid #205fc1;
+  outline-offset: 5px;
+}
+.sky-landing section[id] {
+  scroll-margin-top: 120px;
+}
+.sky-landing .sl-skip-link {
+  position: fixed;
+  top: 15px;
+  left: 20px;
+  padding: 13px 20px;
+  border-radius: 24px;
+  background: #142333;
+  color: #fff;
+  transform: translateY(-160%);
+  z-index: 100;
+}
+.sky-landing .sl-skip-link:focus {
+  transform: translateY(0);
+}
+.sky-landing .sl-header {
+  height: 66px;
+  width: min(1100px, calc(100% - 110px));
+  margin: 14px auto -80px;
+  position: sticky;
+  top: 24px;
+  z-index: 50;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 25px;
+  padding: 8px 10px 8px 23px;
+  border: 1px solid #f2fbffb8;
+  border-radius: 999px;
+  background: #d6effbba;
+  box-shadow:
+    inset 0 1px 0 #ffffffb0,
+    0 8px 25px #357a9e13;
+  backdrop-filter: blur(24px);
+  color: #162a38;
+}
+.sky-landing .sl-brand {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  min-height: 44px;
+  font-weight: 800;
+  font-size: 25px;
+  letter-spacing: -1.1px;
+  white-space: nowrap;
+}
+.sky-landing .sl-brand > svg {
+  width: 31px;
+  height: 31px;
+  color: #142333;
+}
+.sky-landing .sl-desktop-nav {
+  display: flex;
+  align-items: center;
+  gap: 31px;
+  font-size: 12px;
+  font-weight: 600;
+  color: #354f60;
+}
+.sky-landing .sl-desktop-nav > a {
+  min-height: 44px;
+  display: flex;
+  align-items: center;
+  transition: color 150ms;
+}
+.sky-landing .sl-desktop-nav > a:hover,
+.sky-landing .sl-desktop-nav > a[aria-current] {
+  color: #111923;
+}
+.sky-landing .sl-header-actions {
+  display: flex;
+  gap: 7px;
+  align-items: center;
+}
+.sky-landing .sl-sign-in {
+  min-height: 46px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 17px;
+  padding: 10px 20px;
+  color: white;
+  background: #121c25;
+  border: 1px solid #121c25;
+  border-radius: 999px;
+  font-size: 12px;
+  font-weight: 650;
+  cursor: pointer;
+  box-shadow: 0 3px 9px #182c3426;
+  transition:
+    background 160ms,
+    transform 160ms;
+}
+.sky-landing .sl-sign-in:hover {
+  background: #253849;
+  transform: translateY(-1px);
+}
+.sky-landing .sl-icon-button {
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  display: grid;
+  place-items: center;
+  background: transparent;
+  border: 1px solid #92b6cb9c;
+  color: #223f50;
+  cursor: pointer;
+}
+.sky-landing .sl-menu-toggle {
+  display: none;
+}
+.sky-landing .sl-mobile-nav {
+  display: none;
+}
+.sky-landing .sl-hero {
+  padding: 169px 40px 25px;
+  border-radius: 36px;
+  background:
+    radial-gradient(ellipse at 30% 48%, #e8f9ff75, transparent 47%),
+    linear-gradient(155deg, #c0e2f2, #a9d8f2 55%, #cce9f6);
+  position: relative;
+  min-height: 1110px;
+  overflow: hidden;
+  isolation: isolate;
+}
+.sky-landing .sl-hero-grid {
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  background-image:
+    linear-gradient(#649db111 1px, transparent 1px),
+    linear-gradient(90deg, #649db111 1px, transparent 1px);
+  background-size: 240px 240px;
+  mask-image: linear-gradient(transparent, #000 55%, transparent);
+}
+.sky-landing .sl-hero-cloud {
+  position: absolute;
+  pointer-events: none;
+  z-index: -1;
+  background-image: radial-gradient(#fff 1.15px, transparent 1.25px);
+  background-size: 5px 5px;
+  opacity: 0.9;
+  mask-image:
+    radial-gradient(ellipse at 30% 55%, #000 3%, transparent 43%),
+    radial-gradient(ellipse at 60% 33%, #000 5%, transparent 43%),
+    radial-gradient(ellipse at 74% 62%, #000 10%, transparent 43%);
+}
+.sky-landing .sl-cloud-one {
+  left: -140px;
+  top: 210px;
+  width: 570px;
+  height: 390px;
+  transform: rotate(-15deg);
+}
+.sky-landing .sl-cloud-two {
+  right: -70px;
+  top: 100px;
+  width: 520px;
+  height: 350px;
+  transform: rotate(13deg);
+}
+.sky-landing .sl-hero::after {
+  content: "";
+  position: absolute;
+  width: 800px;
+  height: 500px;
+  left: 50%;
+  bottom: 160px;
+  transform: translateX(-50%);
+  z-index: -1;
+  background: radial-gradient(ellipse, #f6fdff9c, transparent 65%);
+  filter: blur(30px);
+}
+.sky-landing .sl-hero-copy {
+  text-align: center;
+  position: relative;
+  z-index: 2;
+  margin: auto;
+  max-width: 1100px;
+}
+.sky-landing .sl-eyebrow {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 9px;
+  font-size: 10px;
+  letter-spacing: 1.7px;
+  font-weight: 750;
+  line-height: 1.7;
+  color: #35576b;
+}
+.sky-landing .sl-eyebrow > span {
+  width: 5px;
+  height: 5px;
+  display: inline-block;
+  background: #2c6bd9;
+  border-radius: 50%;
+  box-shadow: 0 0 0 4px #2d73dc12;
+}
+.sky-landing .sl-hero h1 {
+  font-size: clamp(55px, 6.3vw, 91px);
+  letter-spacing: -4.9px;
+  line-height: 1.045;
+  font-weight: 850;
+  margin: 24px 0 22px;
+  color: #101821;
+}
+.sky-landing .sl-hero-description {
+  font-size: 17px;
+  line-height: 1.8;
+  color: #3c5c70;
+  max-width: 640px;
+  margin: 0 auto;
+}
+.sky-landing .sl-hero-actions {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 13px;
+  flex-wrap: wrap;
+  margin-top: 30px;
+}
+.sky-landing .sl-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 20px;
+  min-height: 52px;
+  padding: 14px 23px;
+  border: 1px solid transparent;
+  border-radius: 999px;
+  cursor: pointer;
+  font-size: 13px;
+  font-weight: 700;
+  line-height: 1.5;
+  transition:
+    transform 180ms,
+    background 180ms,
+    box-shadow 180ms;
+  white-space: nowrap;
+}
+.sky-landing .sl-button:hover {
+  transform: translateY(-2px);
+}
+.sky-landing .sl-button:disabled {
+  opacity: 0.65;
+  cursor: wait;
+  transform: none;
+}
+.sky-landing .sl-button-dark {
+  color: #fff;
+  background: #131e27;
+  box-shadow:
+    0 5px 12px #1e445529,
+    inset 0 1px 0 #ffffff1f;
+  border-color: #131e27;
+}
+.sky-landing .sl-button-dark:hover {
+  background: #253b4a;
+  box-shadow: 0 7px 15px #1e445533;
+}
+.sky-landing .sl-button-glass {
+  background: #e1f4ff9c;
+  border-color: #f1fbff73;
+  box-shadow:
+    inset 0 1px 0 #fff8,
+    0 4px 15px #3060800d;
+  color: #1d394d;
+  backdrop-filter: blur(10px);
+}
+.sky-landing .sl-button-glass:hover {
+  background: #f1fbffbf;
+}
+.sky-landing .sl-hero-note {
+  font-size: 12px;
+  color: #46687e;
+  margin-top: 17px;
+}
+.sky-landing .sl-status-message {
+  position: absolute;
+  top: 103px;
+  left: 50%;
+  transform: translateX(-50%);
+  max-width: calc(100% - 60px);
+  padding: 8px 16px;
+  border-radius: 99px;
+  background: #ffffffb8;
+  border: 1px solid #8fb5cc85;
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  font-size: 12px;
+  color: #34556c;
+  z-index: 5;
+  line-height: 1.7;
+  overflow-wrap: anywhere;
+}
+.sky-landing .sl-status-message > svg {
+  flex-shrink: 0;
+}
+.sky-landing .sl-hero-bottom {
+  max-width: 1140px;
+  display: flex;
+  align-items: center;
+  gap: 30px;
+  justify-content: flex-start;
+  margin: 10px auto 0;
+  padding-top: 17px;
+  border-top: 1px solid #5996b52e;
+  font-size: 11px;
+  color: #3b627a;
+}
+.sky-landing .sl-hero-bottom > span {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.sky-landing .sl-hero-bottom > a {
+  display: grid;
+  place-items: center;
+  width: 44px;
+  height: 44px;
+  border: 1px solid #6e9fb857;
+  border-radius: 50%;
+  margin-left: auto;
+  background: #edf9ff3d;
+  transition: background 160ms;
+}
+.sky-landing .sl-hero-bottom > a:hover {
+  background: #f2fcff9c;
+}
+.sky-landing .sl-section {
+  max-width: 1400px;
+  margin: 0 auto;
+  padding: 108px 5%;
+}
+.sky-landing .sl-section-heading {
+  text-align: center;
+  max-width: 900px;
+  margin: 0 auto 48px;
+}
+.sky-landing .sl-section-tag {
+  display: inline-block;
+  font-size: 10px;
+  letter-spacing: 1.5px;
+  font-weight: 800;
+  color: #537087;
+  line-height: 1.7;
+}
+.sky-landing .sl-section h2 {
+  font-size: clamp(35px, 3.5vw, 52px);
+  font-weight: 800;
+  letter-spacing: -2px;
+  line-height: 1.15;
+  margin: 18px 0 20px;
+  color: #14212d;
+}
+.sky-landing .sl-section-heading > p {
+  font-size: 14px;
+  line-height: 1.9;
+  color: #526b7c;
+  max-width: 650px;
+  margin: auto;
+}
+.sky-landing .sl-feature-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 23px;
+}
+.sky-landing .sl-feature-card {
+  border: 1px solid #d9e5ed;
+  border-radius: 23px;
+  padding: 0 27px 31px;
+  background: #fff;
+  overflow: hidden;
+  position: relative;
+  min-width: 0;
+  transition:
+    transform 180ms,
+    box-shadow 180ms;
+}
+.sky-landing .sl-feature-card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 15px 35px #355d7710;
+}
+.sky-landing .sl-feature-art {
+  height: 258px;
+  margin: 0 -27px 27px;
+  background: #e9f5fc;
+  position: relative;
+  overflow: hidden;
+  isolation: isolate;
+}
+.sky-landing .sl-feature-index {
+  font-size: 9px;
+  letter-spacing: 1px;
+  color: #526b7c;
+  font-weight: 700;
+  margin-bottom: 12px;
+}
+.sky-landing .sl-feature-card h3 {
+  font-size: 27px;
+  font-weight: 800;
+  letter-spacing: -0.9px;
+  line-height: 1.2;
+  margin: 12px 0 15px;
+}
+.sky-landing .sl-feature-card > p:last-child {
+  font-size: 12px;
+  line-height: 1.95;
+  color: #536c7e;
+}
+.sky-landing .sl-paper {
+  position: absolute;
+  left: 50%;
+  top: 45px;
+  width: 172px;
+  height: 184px;
+  border: 1px solid #c7deed;
+  border-radius: 12px;
+  box-shadow: 0 9px 18px #6092b01a;
+}
+.sky-landing .sl-paper-back {
+  transform: translateX(-50%) rotate(16deg);
+  background: #bdddf4;
+  top: 39px;
+  left: 54%;
+}
+.sky-landing .sl-paper-middle {
+  transform: translateX(-50%) rotate(-11deg);
+  background: #eff9ff;
+  left: 46%;
+  top: 48px;
+}
+.sky-landing .sl-paper-front {
+  transform: translateX(-50%) rotate(4deg);
+  background: #fff;
+  display: flex;
+  align-items: center;
+  flex-direction: column;
+  justify-content: center;
+  gap: 11px;
+  padding: 18px;
+}
+.sky-landing .sl-paper-front > svg {
+  color: #3179d9;
+}
+.sky-landing .sl-paper-front > span {
+  font-size: 10px;
+  font-weight: 650;
+  color: #4b6d86;
+}
+.sky-landing .sl-paper-lines {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  width: 100%;
+  margin-top: 2px;
+}
+.sky-landing .sl-paper-lines i {
+  height: 3px;
+  background: #e7eff4;
+  border-radius: 2px;
+  width: 100%;
+}
+.sky-landing .sl-paper-lines i:nth-child(2) {
+  width: 78%;
+}
+.sky-landing .sl-paper-front > b {
+  font-size: 8px;
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  color: #31729c;
+  background: #e4f4fc;
+  border-radius: 20px;
+  padding: 5px 8px;
+}
+.sky-landing .sl-blue-orb {
+  width: 43px;
+  height: 43px;
+  position: absolute;
+  right: 39px;
+  top: 33px;
+  background: radial-gradient(
+    circle at 32% 27%,
+    #e8fcff 1%,
+    #80bff4 24%,
+    #2f78d7 70%,
+    #255bab
+  );
+  border-radius: 50%;
+  box-shadow: 0 6px 13px #3c72a335;
+  z-index: 2;
+}
+.sky-landing .sl-approval-art {
+  background: #d4ecfb;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-direction: column;
+  padding-bottom: 8px;
+}
+.sky-landing .sl-approval-art > div {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  width: 240px;
+  padding: 16px 17px;
+  border-radius: 14px;
+  background: #f8fcff;
+  color: #3e617c;
+  box-shadow:
+    0 6px 0 #b5d6ee,
+    0 13px 23px #3a7caa17;
+  border: 1px solid #fff;
+  transform: rotate(-5deg);
+  z-index: 1;
+}
+.sky-landing .sl-approval-art > div:nth-of-type(2) {
+  transform: rotate(5deg);
+  color: #24588f;
+  background: #c1e1fa;
+  box-shadow:
+    0 6px 0 #8bbde2,
+    0 13px 23px #3a7caa17;
+}
+.sky-landing .sl-approval-art > div > span {
+  font-size: 11px;
+  font-weight: 650;
+}
+.sky-landing .sl-approval-art > div > svg:last-child {
+  margin-left: auto;
+}
+.sky-landing .sl-approval-connector {
+  width: 1px;
+  height: 26px;
+  background: #89b8dc;
+  z-index: 0;
+}
+.sky-landing .sl-approval-dot {
+  position: absolute;
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  left: 40px;
+  bottom: 44px;
+  background: #fff;
+  box-shadow: inset -2px -3px 3px #bad9eb;
+}
+.sky-landing .sl-memory-art {
+  background: #e2eef9;
+}
+.sky-landing .sl-memory-sheet {
+  position: absolute;
+  left: 50%;
+  top: 52px;
+  width: 185px;
+  height: 164px;
+  border-radius: 18px;
+  border: 1px solid #d5e5f0;
+  background: #fff;
+  box-shadow: 0 10px 20px #6c8ea31a;
+}
+.sky-landing .sl-memory-sheet-back {
+  background: #9fcbec;
+  transform: translateX(-50%) rotate(-17deg);
+  left: 47%;
+  top: 59px;
+}
+.sky-landing .sl-memory-sheet-mid {
+  background: #c7e1f5;
+  transform: translateX(-50%) rotate(12deg);
+  left: 53%;
+  top: 44px;
+}
+.sky-landing .sl-memory-sheet-front {
+  transform: translateX(-50%) rotate(-4deg);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-direction: column;
+  gap: 11px;
+  padding: 20px;
+  text-align: center;
+}
+.sky-landing .sl-memory-sheet-front > svg {
+  color: #4175b2;
+}
+.sky-landing .sl-memory-sheet-front > strong {
+  font-size: 10px;
+  line-height: 1.6;
+  color: #406079;
+  font-weight: 700;
+}
+.sky-landing .sl-memory-sheet-front > span {
+  font-size: 8px;
+  color: #536d80;
+  line-height: 1.7;
+}
+.sky-landing .sl-memory-spark {
+  position: absolute;
+  right: 36px;
+  top: 39px;
+  color: #2b6ac7;
+  transform: rotate(12deg);
+}
+.sky-landing .sl-workflow {
+  max-width: calc(1400px - 32px);
+  border-radius: 32px;
+  background:
+    radial-gradient(ellipse at 20% 80%, #b5dff85e, transparent 50%), #e9f5fc;
+  margin-top: 5px;
+  padding-top: 80px;
+  padding-bottom: 70px;
+  position: relative;
+  overflow: hidden;
+}
+.sky-landing .sl-workflow .sl-section-heading {
+  margin-bottom: 35px;
+}
+.sky-landing .sl-workflow-tabs {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 11px;
+  max-width: 1080px;
+  margin: auto;
+}
+.sky-landing .sl-workflow-tabs > button {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  min-height: 57px;
+  padding: 12px 17px;
+  border: 1px solid #cadfeb;
+  border-radius: 15px;
+  background: #f5fbff99;
+  color: #58748a;
+  cursor: pointer;
+  text-align: left;
+  transition:
+    background 160ms,
+    box-shadow 160ms,
+    color 160ms;
+}
+.sky-landing .sl-workflow-tabs > button > span {
+  font-size: 10px;
+  font-weight: 650;
+  color: #89a2b5;
+  margin-right: 3px;
+}
+.sky-landing .sl-workflow-tabs > button > strong {
+  font-size: 13px;
+  font-weight: 750;
+}
+.sky-landing .sl-workflow-tabs > button > svg:last-child {
+  margin-left: auto;
+  opacity: 0.5;
+}
+.sky-landing .sl-workflow-tabs > button:hover {
+  background: #fff;
+}
+.sky-landing .sl-workflow-tabs > button.is-active {
+  background: #fff;
+  color: #1f4c71;
+  border-color: #4f8bc1;
+  box-shadow: 0 6px 16px #4b83a51a;
+}
+.sky-landing .sl-workflow-tabs > button.is-active > span {
+  color: #2461a2;
+}
+.sky-landing .sl-workflow-panel {
+  max-width: 1080px;
+  margin: 22px auto 0;
+  display: grid;
+  grid-template-columns: 1.05fr 1fr;
+  border: 1px solid #d5e5ee;
+  border-radius: 24px;
+  background: #fbfdff;
+  box-shadow: 0 12px 30px #57829c09;
+  overflow: hidden;
+  min-height: 430px;
+}
+.sky-landing .sl-workflow-copy {
+  padding: 42px 38px;
+  display: flex;
+  align-items: flex-start;
+  flex-direction: column;
+}
+.sky-landing .sl-workflow-copy > .sl-eyebrow {
+  justify-content: flex-start;
+  color: #566f83;
+  font-size: 9px;
+  letter-spacing: 1.1px;
+}
+.sky-landing .sl-workflow-copy > h3 {
+  font-size: 31px;
+  letter-spacing: -1px;
+  font-weight: 800;
+  line-height: 1.2;
+  margin: 18px 0;
+}
+.sky-landing .sl-workflow-copy > p:not(.sl-eyebrow) {
+  font-size: 13px;
+  line-height: 1.9;
+  color: #536d80;
+}
+.sky-landing .sl-workflow-copy > dl {
+  margin: 25px 0 18px;
+  padding-top: 20px;
+  border-top: 1px solid #e0eaf0;
+  width: 100%;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 20px;
+}
+.sky-landing .sl-workflow-copy dt {
+  font-size: 10px;
+  color: #5f7789;
+  margin-bottom: 6px;
+}
+.sky-landing .sl-workflow-copy dd {
+  margin: 0;
+  font-size: 11px;
+  line-height: 1.7;
+  font-weight: 650;
+  color: #4b6d87;
+}
+.sky-landing .sl-text-button {
+  display: flex;
+  align-items: center;
+  gap: 17px;
+  min-height: 44px;
+  padding: 0;
+  border: 0;
+  background: none;
+  color: #2865ae;
+  font-size: 12px;
+  font-weight: 700;
+  cursor: pointer;
+  margin-top: auto;
+}
+.sky-landing .sl-text-button:hover {
+  color: #103f7c;
+}
+.sky-landing .sl-workflow-art {
+  position: relative;
+  background:
+    radial-gradient(ellipse at 50% 55%, #d8edfb, transparent 70%), #f0f8fe;
+  isolation: isolate;
+  overflow: hidden;
+  min-height: 430px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.sky-landing .sl-workflow-art-label {
+  position: absolute;
+  top: 24px;
+  left: 0;
+  right: 0;
+  text-align: center;
+  font-size: 8px;
+  letter-spacing: 0.7px;
+  color: #5f798f;
+  font-weight: 600;
+}
+.sky-landing .sl-workflow-sheet {
+  position: absolute;
+  top: 88px;
+  left: 50%;
+  width: 255px;
+  min-height: 277px;
+  border-radius: 19px;
+  border: 1px solid #d4e4ee;
+  box-shadow: 0 12px 24px #5b90b41a;
+}
+.sky-landing .sl-workflow-sheet-back {
+  background: #c5e2f7;
+  transform: translateX(-50%) rotate(-10deg);
+  left: 47%;
+  top: 88px;
+}
+.sky-landing .sl-workflow-sheet-front {
+  background: #fff;
+  transform: translateX(-50%) rotate(5deg);
+  padding: 24px 25px;
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+}
+.sky-landing .sl-workflow-sheet-icon {
+  width: 55px;
+  height: 55px;
+  border-radius: 17px;
+  background: #dceffc;
+  box-shadow:
+    inset 0 1px 0 #fff,
+    0 4px 0 #c0dbed;
+  color: #3378c2;
+  display: grid;
+  place-items: center;
+  align-self: center;
+  margin-bottom: 2px;
+}
+.sky-landing .sl-workflow-sheet h4 {
+  font-size: 14px;
+  line-height: 1.5;
+  font-weight: 750;
+  letter-spacing: -0.4px;
+  text-align: center;
+  color: #365a74;
+}
+.sky-landing .sl-workflow-sheet ul {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 9px;
+}
+.sky-landing .sl-workflow-sheet li {
+  font-size: 10px;
+  color: #536d80;
+  display: flex;
+  gap: 7px;
+  align-items: center;
+}
+.sky-landing .sl-workflow-sheet li > svg {
+  color: #528bb9;
+  flex-shrink: 0;
+}
+.sky-landing .sl-workflow-sheet p {
+  font-size: 9px;
+  color: #536d80;
+  padding-top: 12px;
+  border-top: 1px solid #e5edf3;
+  line-height: 1.7;
+}
+.sky-landing .sl-workflow-art-star {
+  position: absolute;
+  right: 34px;
+  top: 86px;
+  color: #347ed0;
+  transform: rotate(13deg);
+}
+.sky-landing .sl-foundation {
+  padding-top: 112px;
+}
+.sky-landing .sl-foundation-heading {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 50px;
+  margin-bottom: 40px;
+}
+.sky-landing .sl-foundation-heading h2 {
+  margin-bottom: 0;
+}
+.sky-landing .sl-foundation-heading > p {
+  max-width: 350px;
+  font-size: 13px;
+  line-height: 1.9;
+  color: #536d80;
+  margin-bottom: 4px;
+}
+.sky-landing .sl-foundation-layout {
+  display: grid;
+  grid-template-columns: 0.85fr 1.15fr;
+  gap: 28px;
+}
+.sky-landing .sl-foundation-options {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+.sky-landing .sl-foundation-options > button {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 19px 23px;
+  min-height: 91px;
+  border: 1px solid #e0e8ee;
+  border-radius: 17px;
+  background: #fff;
+  color: #56748b;
+  cursor: pointer;
+  text-align: left;
+  transition:
+    background 160ms,
+    border-color 160ms,
+    transform 160ms;
+}
+.sky-landing .sl-foundation-options > button > span {
+  width: 43px;
+  height: 43px;
+  display: grid;
+  place-items: center;
+  background: #f0f6fb;
+  border-radius: 13px;
+  color: #7396af;
+  box-shadow: inset 0 1px 0 #fff;
+  flex-shrink: 0;
+}
+.sky-landing .sl-foundation-options > button > strong {
+  font-size: 15px;
+  font-weight: 750;
+}
+.sky-landing .sl-foundation-options > button > svg {
+  margin-left: auto;
+  color: #9db1c1;
+  flex-shrink: 0;
+}
+.sky-landing .sl-foundation-options > button:hover {
+  border-color: #b8d2e6;
+  transform: translateX(2px);
+}
+.sky-landing .sl-foundation-options > button.is-active {
+  background: #e9f5fc;
+  border-color: #4f8bc1;
+  color: #315f82;
+}
+.sky-landing .sl-foundation-options > button.is-active > span {
+  background: #d1e9fa;
+  color: #397fc4;
+}
+.sky-landing .sl-foundation-detail {
+  background: #f1f7fb;
+  border: 1px solid #dce7ef;
+  border-radius: 21px;
+  padding: 34px 37px;
+  display: flex;
+  align-items: flex-start;
+  flex-direction: column;
+  min-height: 300px;
+}
+.sky-landing .sl-foundation-detail-icon {
+  width: 60px;
+  height: 60px;
+  display: grid;
+  place-items: center;
+  border: 1px solid #d6e6f2;
+  background: #fff;
+  border-radius: 18px;
+  box-shadow: 0 5px 0 #d5e5f0;
+  color: #3a79af;
+  margin-bottom: 22px;
+}
+.sky-landing .sl-foundation-detail > h3 {
+  font-size: 25px;
+  line-height: 1.3;
+  letter-spacing: -0.6px;
+  font-weight: 800;
+  margin-bottom: 13px;
+}
+.sky-landing .sl-foundation-detail > p {
+  font-size: 13px;
+  line-height: 1.95;
+  color: #536e82;
+  max-width: 520px;
+}
+.sky-landing .sl-foundation-detail > div {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  margin-top: 23px;
+}
+.sky-landing .sl-foundation-detail > div > span {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 10px;
+  color: #4e6b82;
+  padding: 5px 8px;
+  border-radius: 99px;
+  background: #e1edf5;
+  border: 1px solid #d5e5ef;
+}
+.sky-landing .sl-foundation-note {
+  display: flex;
+  align-items: center;
+  gap: 13px;
+  padding: 20px 22px;
+  background: #f7fafc;
+  border: 1px solid #e1e9ef;
+  border-radius: 15px;
+  margin-top: 23px;
+  color: #7892a6;
+}
+.sky-landing .sl-foundation-note > svg {
+  flex-shrink: 0;
+  color: #5e88a5;
+}
+.sky-landing .sl-foundation-note > p {
+  font-size: 11px;
+  line-height: 1.8;
+  color: #526f86;
+  flex: 1;
+}
+.sky-landing .sl-foundation-note > a {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  min-height: 44px;
+  color: #3e729a;
+  font-size: 11px;
+  font-weight: 700;
+  white-space: nowrap;
+}
+.sky-landing .sl-faq {
+  display: grid;
+  grid-template-columns: 0.85fr 1.15fr;
+  gap: 70px;
+  padding-top: 25px;
+  padding-bottom: 110px;
+}
+.sky-landing .sl-faq h2 {
+  font-size: 43px;
+  letter-spacing: -1.5px;
+  line-height: 1.16;
+  margin: 18px 0;
+}
+.sky-landing .sl-faq > div > p {
+  font-size: 13px;
+  line-height: 1.9;
+  color: #536f83;
+}
+.sky-landing .sl-faq-list {
+  border-top: 1px solid #dfe8ef;
+}
+.sky-landing .sl-faq details {
+  border-bottom: 1px solid #dfe8ef;
+}
+.sky-landing .sl-faq summary {
+  list-style: none;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 20px;
+  min-height: 81px;
+  padding: 21px 0;
+  font-size: 13px;
+  line-height: 1.7;
+  font-weight: 700;
+  color: #496477;
+  cursor: pointer;
+}
+.sky-landing .sl-faq summary::-webkit-details-marker {
+  display: none;
+}
+.sky-landing .sl-faq summary > svg {
+  flex-shrink: 0;
+  color: #8ba6ba;
+  transition: transform 160ms;
+}
+.sky-landing .sl-faq details[open] summary > svg {
+  transform: rotate(180deg);
+}
+.sky-landing .sl-faq details > p {
+  font-size: 12px;
+  line-height: 1.95;
+  color: #536f83;
+  padding: 0 27px 23px 0;
+}
+.sky-landing .sl-final-cta {
+  max-width: calc(1400px - 32px);
+  margin: 0 auto;
+  text-align: center;
+  border: 1px solid #d2e8f6;
+  border-radius: 32px;
+  background:
+    radial-gradient(ellipse at 20% 60%, #f7fdffb8, transparent 45%), #cdeafa;
+  padding: 81px 35px 70px;
+  position: relative;
+  overflow: hidden;
+  isolation: isolate;
+}
+.sky-landing .sl-final-cloud {
+  position: absolute;
+  right: -140px;
+  top: -20px;
+  width: 700px;
+  height: 480px;
+  background-image: radial-gradient(#fff 1.2px, transparent 1.4px);
+  background-size: 5px 5px;
+  mask-image: radial-gradient(ellipse at center, #000 3%, transparent 62%);
+  opacity: 0.7;
+  z-index: -1;
+}
+.sky-landing .sl-final-spark {
+  position: absolute;
+  left: 13%;
+  top: 95px;
+  color: #3179c3;
+  transform: rotate(-10deg);
+}
+.sky-landing .sl-final-cta h2 {
+  font-size: clamp(44px, 4.8vw, 69px);
+  letter-spacing: -3.1px;
+  line-height: 1.08;
+  font-weight: 850;
+  margin: 21px 0;
+}
+.sky-landing .sl-final-cta > p {
+  font-size: 14px;
+  color: #3b607a;
+}
+.sky-landing .sl-final-cta > .sl-button {
+  margin-top: 28px;
+}
+.sky-landing .sl-final-note {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+  font-size: 11px;
+  color: #426780;
+  margin-top: 18px;
+}
+.sky-landing .sl-footer {
+  max-width: 1400px;
+  margin: auto;
+  padding: 56px 5% 16px;
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 25px;
+  flex-wrap: wrap;
+}
+.sky-landing .sl-footer .sl-brand {
+  font-size: 24px;
+}
+.sky-landing .sl-footer > div > p {
+  font-size: 12px;
+  color: #5d7586;
+  margin-top: 11px;
+}
+.sky-landing .sl-footer > nav {
+  display: flex;
+  align-items: center;
+  gap: 28px;
+  font-size: 12px;
+  font-weight: 650;
+  color: #526f86;
+}
+.sky-landing .sl-footer > nav > a {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  min-height: 44px;
+}
+.sky-landing .sl-footer > nav > a:hover {
+  color: #1e5074;
+}
+.sky-landing .sl-footer-bottom {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 20px;
+  font-size: 10px;
+  color: #536b7d;
+  border-top: 1px solid #e2eaf0;
+  padding-top: 21px;
+  margin-top: 19px;
+}
+.sky-landing .sl-footer-bottom > a {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  min-height: 44px;
+  color: #4f6b82;
+}
+.sky-landing .sl-access-dialog {
+  position: fixed;
+  inset: 0;
+  margin: auto;
+  width: min(470px, calc(100vw - 32px));
+  max-height: calc(100dvh - 32px);
+  padding: 39px 34px 29px;
+  border: 1px solid #ffffffd9;
+  border-radius: 26px;
+  background: linear-gradient(155deg, #fff, #f2f9ff);
+  color: #1b3447;
+  box-shadow: 0 35px 100px #1836494d;
+  font-family: var(--sl-font);
+  overflow-y: auto;
+}
+.sky-landing .sl-access-dialog::backdrop {
+  background: #4169805e;
+  backdrop-filter: blur(12px);
+}
+.sky-landing .sl-dialog-close {
+  position: absolute;
+  right: 16px;
+  top: 16px;
+  border: 0;
+  background: #eaf3f9;
+  color: #6e8ba0;
+  width: 44px;
+  height: 44px;
+}
+.sky-landing .sl-dialog-close:hover {
+  background: #daeaf6;
+  color: #25577c;
+}
+.sky-landing .sl-access-icon {
+  width: 60px;
+  height: 60px;
+  border: 1px solid #d0e5f4;
+  border-radius: 18px;
+  background: #d9eefc;
+  box-shadow:
+    inset 0 1px 0 #fff,
+    0 5px 0 #c4dfef;
+  display: grid;
+  place-items: center;
+  margin-bottom: 25px;
+}
+.sky-landing .sl-access-icon > svg {
+  width: 31px;
+  height: 31px;
+  color: #2670bd;
+}
+.sky-landing .sl-access-dialog .sl-eyebrow {
+  font-size: 9px;
+  justify-content: flex-start;
+  color: #7b98ad;
+  letter-spacing: 1.1px;
+}
+.sky-landing .sl-access-dialog h2 {
+  font-size: 31px;
+  letter-spacing: -1.1px;
+  line-height: 1.2;
+  font-weight: 800;
+  margin: 13px 0 16px;
+}
+.sky-landing .sl-access-description {
+  font-size: 13px;
+  line-height: 1.9;
+  color: #536f83;
+}
+.sky-landing .sl-access-dialog form {
+  margin-top: 26px;
+}
+.sky-landing .sl-access-dialog label {
+  display: block;
+  font-size: 12px;
+  font-weight: 700;
+  color: #526f86;
+  margin: 0 0 9px;
+}
+.sky-landing .sl-access-dialog input {
+  display: block;
+  width: 100%;
+  min-height: 50px;
+  padding: 13px 15px;
+  border-radius: 12px;
+  border: 1px solid #cbdde9;
+  background: #fff;
+  color: #34566f;
+  font-size: 12px;
+  min-width: 0;
+}
+.sky-landing .sl-access-dialog input::placeholder {
+  color: #536b7d;
+}
+.sky-landing .sl-access-submit {
+  width: 100%;
+  margin-top: 17px;
+  justify-content: space-between;
+  min-height: 50px;
+  font-size: 12px;
+}
+.sky-landing .sl-access-note {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+  font-size: 10px;
+  color: #5a788f;
+  margin-top: 20px;
+  line-height: 1.8;
+}
+.sky-landing .sl-access-note > svg {
+  flex-shrink: 0;
+}
+.sky-landing .sl-form-error {
+  margin-top: 12px;
+  padding: 11px 13px;
+  border: 1px solid #dfb6a8;
+  background: #fff1eb;
+  border-radius: 11px;
+  color: #9b533c;
+  font-size: 12px;
+  line-height: 1.8;
+  overflow-wrap: anywhere;
+}
+
+@media (min-width: 1800px) {
+  .sky-landing {
+    padding: 20px;
+  }
+  .sky-landing .sl-hero {
+    min-height: 1180px;
+    padding-top: 180px;
+  }
+  .sky-landing .sl-hero h1 {
+    font-size: 102px;
+    letter-spacing: -5.3px;
+  }
+  .sky-landing .sl-hero-bottom {
+    max-width: 1270px;
+    margin-top: 18px;
+  }
+  .sky-landing .sl-header {
+    width: min(1160px, calc(100% - 120px));
+  }
+  .sky-landing .sl-section {
+    padding-inline: 70px;
+  }
+  .sky-landing .sl-workflow,
+  .sky-landing .sl-final-cta {
+    max-width: 1500px;
+  }
+}
+@media (max-width: 1100px) {
+  .sky-landing .sl-header {
+    width: calc(100% - 60px);
+    padding-left: 20px;
+  }
+  .sky-landing .sl-desktop-nav {
+    gap: 23px;
+  }
+  .sky-landing .sl-hero {
+    padding: 160px 30px 23px;
+    min-height: 1040px;
+  }
+  .sky-landing .sl-hero h1 {
+    font-size: 70px;
+    letter-spacing: -3.6px;
+  }
+  .sky-landing .sl-hero-description {
+    font-size: 15px;
+  }
+  .sky-landing .sl-section {
+    padding: 85px 4%;
+  }
+  .sky-landing .sl-feature-grid {
+    gap: 17px;
+  }
+  .sky-landing .sl-feature-card {
+    padding-inline: 22px;
+  }
+  .sky-landing .sl-feature-art {
+    margin-inline: -22px;
+    height: 238px;
+  }
+  .sky-landing .sl-feature-card h3 {
+    font-size: 24px;
+  }
+  .sky-landing .sl-paper {
+    width: 157px;
+    height: 175px;
+    top: 37px;
+  }
+  .sky-landing .sl-paper-back {
+    top: 34px;
+  }
+  .sky-landing .sl-paper-middle {
+    top: 42px;
+  }
+  .sky-landing .sl-blue-orb {
+    right: 24px;
+    top: 23px;
+    width: 36px;
+    height: 36px;
+  }
+  .sky-landing .sl-approval-art > div {
+    width: 208px;
+    padding: 14px;
+    font-size: 10px;
+    gap: 9px;
+  }
+  .sky-landing .sl-approval-art > div > span {
+    font-size: 10px;
+  }
+  .sky-landing .sl-memory-sheet {
+    width: 164px;
+    height: 159px;
+    top: 47px;
+  }
+  .sky-landing .sl-memory-sheet-back {
+    top: 56px;
+  }
+  .sky-landing .sl-memory-sheet-mid {
+    top: 42px;
+  }
+  .sky-landing .sl-memory-spark {
+    right: 21px;
+    top: 31px;
+  }
+  .sky-landing .sl-workflow {
+    padding-top: 70px;
+    padding-bottom: 60px;
+  }
+  .sky-landing .sl-workflow-tabs {
+    gap: 9px;
+  }
+  .sky-landing .sl-workflow-tabs > button {
+    padding-inline: 12px;
+    gap: 7px;
+  }
+  .sky-landing .sl-workflow-tabs > button > strong {
+    font-size: 12px;
+  }
+  .sky-landing .sl-workflow-tabs > button > span {
+    font-size: 9px;
+  }
+  .sky-landing .sl-workflow-copy {
+    padding: 35px 28px;
+  }
+  .sky-landing .sl-workflow-copy > h3 {
+    font-size: 27px;
+  }
+  .sky-landing .sl-workflow-copy > dl {
+    gap: 16px;
+  }
+  .sky-landing .sl-workflow-sheet {
+    width: 220px;
+    min-height: 270px;
+    padding: 21px;
+  }
+  .sky-landing .sl-workflow-art-star {
+    right: 23px;
+    top: 80px;
+  }
+  .sky-landing .sl-workflow-art-star > svg {
+    width: 25px;
+    height: 25px;
+  }
+  .sky-landing .sl-foundation-heading {
+    gap: 35px;
+  }
+  .sky-landing .sl-foundation-heading > p {
+    max-width: 300px;
+    font-size: 12px;
+  }
+  .sky-landing .sl-foundation-layout {
+    gap: 22px;
+  }
+  .sky-landing .sl-foundation-options > button {
+    padding: 17px;
+    gap: 13px;
+  }
+  .sky-landing .sl-foundation-detail {
+    padding: 29px;
+  }
+  .sky-landing .sl-foundation-detail > h3 {
+    font-size: 23px;
+  }
+  .sky-landing .sl-foundation-note {
+    padding: 17px;
+  }
+  .sky-landing .sl-foundation-note > p {
+    font-size: 10px;
+  }
+  .sky-landing .sl-faq {
+    gap: 40px;
+    padding-top: 20px;
+  }
+  .sky-landing .sl-faq h2 {
+    font-size: 38px;
+  }
+  .sky-landing .sl-final-cta {
+    padding-top: 70px;
+    padding-bottom: 60px;
+  }
+  .sky-landing .sl-final-spark {
+    left: 8%;
+    top: 100px;
+  }
+  .sky-landing .sl-final-spark > svg {
+    width: 33px;
+    height: 33px;
+  }
+}
+@media (max-width: 760px) {
+  .sky-landing {
+    padding: 10px;
+  }
+  .sky-landing .sl-header {
+    height: 61px;
+    width: calc(100% - 28px);
+    margin: 12px auto -73px;
+    top: 16px;
+    padding: 7px 8px 7px 16px;
+    gap: 12px;
+    border-radius: 99px;
+  }
+  .sky-landing .sl-brand {
+    font-size: 22px;
+    gap: 7px;
+    letter-spacing: -0.9px;
+  }
+  .sky-landing .sl-brand > svg {
+    width: 27px;
+    height: 27px;
+  }
+  .sky-landing .sl-desktop-nav {
+    display: none;
+  }
+  .sky-landing .sl-menu-toggle {
+    display: grid;
+  }
+  .sky-landing .sl-header-actions {
+    gap: 6px;
+  }
+  .sky-landing .sl-sign-in {
+    min-height: 44px;
+    padding-inline: 15px;
+    gap: 11px;
+    font-size: 12px;
+  }
+  .sky-landing .sl-icon-button {
+    width: 42px;
+    height: 44px;
+  }
+  .sky-landing .sl-menu-toggle {
+    border-color: #a3c5dc80;
+    background: #eaf8ff5e;
+  }
+  .sky-landing .sl-mobile-nav {
+    display: flex;
+    flex-direction: column;
+    position: absolute;
+    top: 69px;
+    left: 0;
+    right: 0;
+    padding: 12px;
+    border: 1px solid #f0fbffb8;
+    border-radius: 23px;
+    background: #def2ffed;
+    box-shadow: 0 13px 30px #5486a32e;
+    backdrop-filter: blur(20px);
+  }
+  .sky-landing .sl-mobile-nav > a {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    min-height: 48px;
+    padding: 11px 13px;
+    border-radius: 13px;
+    font-size: 13px;
+    font-weight: 650;
+    color: #486e8a;
+  }
+  .sky-landing .sl-mobile-nav > a:hover {
+    background: #f8fdff9c;
+  }
+  .sky-landing .sl-hero {
+    border-radius: 26px;
+    padding: 135px 20px 20px;
+    min-height: auto;
+  }
+  .sky-landing .sl-hero h1 {
+    font-size: clamp(37px, 7.4vw, 55px);
+    line-height: 1.095;
+    letter-spacing: -2.2px;
+    margin: 20px 0 20px;
+  }
+  .sky-landing .sl-hero .sl-eyebrow {
+    font-size: 8px;
+    letter-spacing: 1.25px;
+    gap: 8px;
+  }
+  .sky-landing .sl-hero-description {
+    font-size: 13px;
+    line-height: 1.85;
+    max-width: 390px;
+  }
+  .sky-landing .sl-desktop-break {
+    display: none;
+  }
+  .sky-landing .sl-hero-actions {
+    margin-top: 25px;
+    gap: 9px;
+  }
+  .sky-landing .sl-button {
+    font-size: 11px;
+    min-height: 48px;
+    padding: 13px 17px;
+    gap: 11px;
+  }
+  .sky-landing .sl-hero-note {
+    font-size: 10px;
+    line-height: 1.9;
+    margin: 16px auto 0;
+    max-width: 300px;
+  }
+  .sky-landing .sl-cloud-one {
+    top: 245px;
+    width: 340px;
+    height: 290px;
+    left: -190px;
+    opacity: 0.8;
+  }
+  .sky-landing .sl-cloud-two {
+    right: -175px;
+    top: 100px;
+    width: 340px;
+    height: 280px;
+    opacity: 0.75;
+  }
+  .sky-landing .sl-hero-bottom {
+    gap: 13px;
+    flex-wrap: wrap;
+    margin-top: 13px;
+    padding-top: 17px;
+    font-size: 9px;
+  }
+  .sky-landing .sl-hero-bottom > span {
+    gap: 6px;
+    min-height: 29px;
+  }
+  .sky-landing .sl-hero-bottom > span > svg {
+    width: 13px;
+    height: 13px;
+  }
+  .sky-landing .sl-hero-bottom > a {
+    width: 40px;
+    min-height: 44px;
+    height: 44px;
+    flex-shrink: 0;
+  }
+  .sky-landing .sl-status-message {
+    top: 84px;
+    max-width: calc(100% - 33px);
+    font-size: 10px;
+    padding: 6px 11px;
+    gap: 6px;
+  }
+  .sky-landing .sl-section {
+    padding: 67px 18px;
+  }
+  .sky-landing .sl-section h2 {
+    font-size: 34px;
+    letter-spacing: -1.45px;
+    line-height: 1.17;
+    margin: 17px 0;
+  }
+  .sky-landing .sl-section-tag {
+    font-size: 8px;
+    letter-spacing: 1.1px;
+  }
+  .sky-landing .sl-section-heading {
+    margin-bottom: 31px;
+  }
+  .sky-landing .sl-section-heading > p {
+    font-size: 12px;
+    line-height: 1.95;
+  }
+  .sky-landing .sl-feature-grid {
+    grid-template-columns: 1fr;
+    gap: 18px;
+  }
+  .sky-landing .sl-feature-card {
+    padding: 0 25px 29px;
+    border-radius: 21px;
+  }
+  .sky-landing .sl-feature-art {
+    height: 245px;
+    margin-inline: -25px;
+    margin-bottom: 24px;
+  }
+  .sky-landing .sl-feature-card h3 {
+    font-size: 28px;
+    letter-spacing: -0.9px;
+    margin-block: 12px 14px;
+  }
+  .sky-landing .sl-feature-index {
+    font-size: 9px;
+  }
+  .sky-landing .sl-feature-card > p:last-child {
+    font-size: 12px;
+    line-height: 1.95;
+  }
+  .sky-landing .sl-paper {
+    top: 37px;
+    width: 172px;
+    height: 182px;
+  }
+  .sky-landing .sl-paper-back {
+    top: 32px;
+  }
+  .sky-landing .sl-paper-middle {
+    top: 43px;
+  }
+  .sky-landing .sl-paper-front > span {
+    font-size: 10px;
+  }
+  .sky-landing .sl-blue-orb {
+    width: 39px;
+    height: 39px;
+    right: 39px;
+    top: 25px;
+  }
+  .sky-landing .sl-approval-art > div {
+    width: 240px;
+    padding: 15px 17px;
+    gap: 13px;
+  }
+  .sky-landing .sl-approval-art > div > span {
+    font-size: 11px;
+  }
+  .sky-landing .sl-memory-sheet {
+    width: 190px;
+    height: 168px;
+    top: 48px;
+  }
+  .sky-landing .sl-memory-sheet-back {
+    top: 59px;
+  }
+  .sky-landing .sl-memory-sheet-mid {
+    top: 42px;
+  }
+  .sky-landing .sl-memory-spark {
+    right: 35px;
+    top: 30px;
+  }
+  .sky-landing .sl-workflow {
+    margin: 0;
+    border-radius: 24px;
+    padding: 61px 17px 21px;
+  }
+  .sky-landing .sl-workflow h2 {
+    font-size: 30px;
+    letter-spacing: -1.1px;
+  }
+  .sky-landing .sl-workflow .sl-section-heading {
+    margin-bottom: 27px;
+  }
+  .sky-landing .sl-workflow-tabs {
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
+  }
+  .sky-landing .sl-workflow-tabs > button {
+    min-height: 54px;
+    border-radius: 13px;
+    padding: 12px 13px;
+    gap: 8px;
+  }
+  .sky-landing .sl-workflow-tabs > button > span {
+    font-size: 9px;
+    margin-right: 0;
+  }
+  .sky-landing .sl-workflow-tabs > button > strong {
+    font-size: 12px;
+  }
+  .sky-landing .sl-workflow-tabs > button > svg {
+    width: 16px;
+    height: 16px;
+  }
+  .sky-landing .sl-workflow-tabs > button > svg:last-child {
+    display: none;
+  }
+  .sky-landing .sl-workflow-panel {
+    grid-template-columns: 1fr;
+    border-radius: 19px;
+    margin-top: 16px;
+  }
+  .sky-landing .sl-workflow-copy {
+    padding: 27px 22px 22px;
+  }
+  .sky-landing .sl-workflow-copy > .sl-eyebrow {
+    font-size: 9px;
+  }
+  .sky-landing .sl-workflow-copy > h3 {
+    font-size: 27px;
+    letter-spacing: -0.7px;
+    line-height: 1.24;
+    margin-block: 16px;
+  }
+  .sky-landing .sl-workflow-copy > p:not(.sl-eyebrow) {
+    font-size: 12px;
+    line-height: 1.95;
+  }
+  .sky-landing .sl-workflow-copy > dl {
+    margin-top: 22px;
+    padding-top: 18px;
+    gap: 15px;
+  }
+  .sky-landing .sl-workflow-copy dt {
+    font-size: 9px;
+  }
+  .sky-landing .sl-workflow-copy dd {
+    font-size: 10px;
+    line-height: 1.8;
+  }
+  .sky-landing .sl-text-button {
+    font-size: 12px;
+    gap: 14px;
+  }
+  .sky-landing .sl-workflow-art {
+    min-height: 380px;
+    border-top: 1px solid #dcebf5;
+  }
+  .sky-landing .sl-workflow-art-label {
+    top: 22px;
+    font-size: 7px;
+    letter-spacing: 0.45px;
+  }
+  .sky-landing .sl-workflow-sheet {
+    width: 235px;
+    min-height: 267px;
+    top: 77px;
+    padding: 22px;
+  }
+  .sky-landing .sl-workflow-sheet-back {
+    top: 75px;
+  }
+  .sky-landing .sl-workflow-sheet-icon {
+    width: 50px;
+    height: 50px;
+    border-radius: 15px;
+  }
+  .sky-landing .sl-workflow-sheet h4 {
+    font-size: 13px;
+  }
+  .sky-landing .sl-workflow-sheet li {
+    font-size: 10px;
+  }
+  .sky-landing .sl-workflow-sheet p {
+    font-size: 9px;
+  }
+  .sky-landing .sl-workflow-art-star {
+    top: 61px;
+    right: 18px;
+  }
+  .sky-landing .sl-workflow-art-star > svg {
+    width: 25px;
+    height: 25px;
+  }
+  .sky-landing .sl-foundation {
+    padding-top: 72px;
+    padding-bottom: 62px;
+  }
+  .sky-landing .sl-foundation-heading {
+    display: block;
+    margin-bottom: 29px;
+  }
+  .sky-landing .sl-foundation-heading h2 {
+    font-size: 37px;
+    line-height: 1.15;
+    margin-bottom: 20px;
+  }
+  .sky-landing .sl-foundation-heading > p {
+    max-width: none;
+    font-size: 12px;
+    line-height: 1.95;
+  }
+  .sky-landing .sl-foundation-layout {
+    grid-template-columns: 1fr;
+    gap: 18px;
+  }
+  .sky-landing .sl-foundation-options {
+    gap: 9px;
+  }
+  .sky-landing .sl-foundation-options > button {
+    padding: 13px 17px;
+    min-height: 75px;
+    border-radius: 15px;
+    gap: 13px;
+  }
+  .sky-landing .sl-foundation-options > button > span {
+    width: 40px;
+    height: 40px;
+    border-radius: 12px;
+  }
+  .sky-landing .sl-foundation-options > button > strong {
+    font-size: 14px;
+  }
+  .sky-landing .sl-foundation-options > button > svg {
+    width: 17px;
+    height: 17px;
+  }
+  .sky-landing .sl-foundation-detail {
+    padding: 28px 25px;
+    border-radius: 19px;
+    min-height: 300px;
+  }
+  .sky-landing .sl-foundation-detail-icon {
+    width: 54px;
+    height: 54px;
+    border-radius: 16px;
+    margin-bottom: 23px;
+  }
+  .sky-landing .sl-foundation-detail-icon > svg {
+    width: 28px;
+    height: 28px;
+  }
+  .sky-landing .sl-foundation-detail > h3 {
+    font-size: 25px;
+    letter-spacing: -0.8px;
+  }
+  .sky-landing .sl-foundation-detail > p {
+    font-size: 12px;
+  }
+  .sky-landing .sl-foundation-detail > div {
+    gap: 6px;
+    margin-top: 20px;
+  }
+  .sky-landing .sl-foundation-detail > div > span {
+    font-size: 9px;
+    padding: 5px 7px;
+  }
+  .sky-landing .sl-foundation-note {
+    flex-wrap: wrap;
+    padding: 17px;
+    gap: 11px;
+    margin-top: 18px;
+    border-radius: 14px;
+    align-items: flex-start;
+  }
+  .sky-landing .sl-foundation-note > svg {
+    margin-top: 2px;
+  }
+  .sky-landing .sl-foundation-note > p {
+    font-size: 11px;
+    flex-basis: calc(100% - 30px);
+  }
+  .sky-landing .sl-foundation-note > a {
+    margin-left: 29px;
+    font-size: 11px;
+    min-height: 44px;
+  }
+  .sky-landing .sl-faq {
+    grid-template-columns: 1fr;
+    gap: 30px;
+    padding-top: 12px;
+    padding-bottom: 65px;
+  }
+  .sky-landing .sl-faq h2 {
+    font-size: 37px;
+  }
+  .sky-landing .sl-faq > div > p {
+    font-size: 12px;
+    line-height: 1.95;
+  }
+  .sky-landing .sl-faq > div > p > br {
+    display: none;
+  }
+  .sky-landing .sl-faq summary {
+    font-size: 12px;
+    min-height: 76px;
+    gap: 15px;
+    padding-block: 20px;
+  }
+  .sky-landing .sl-faq details > p {
+    font-size: 12px;
+    line-height: 1.95;
+    padding-right: 15px;
+  }
+  .sky-landing .sl-final-cta {
+    margin: 0;
+    border-radius: 24px;
+    padding: 62px 20px 53px;
+  }
+  .sky-landing .sl-final-cta h2 {
+    font-size: 44px;
+    letter-spacing: -2px;
+    margin: 19px 0;
+    line-height: 1.08;
+  }
+  .sky-landing .sl-final-cta > p {
+    font-size: 12px;
+    line-height: 1.95;
+    max-width: 270px;
+    margin: auto;
+  }
+  .sky-landing .sl-final-cta > .sl-button {
+    font-size: 12px;
+    margin-top: 24px;
+  }
+  .sky-landing .sl-final-note {
+    font-size: 10px;
+    gap: 6px;
+    line-height: 1.9;
+  }
+  .sky-landing .sl-final-note > svg {
+    width: 13px;
+    height: 13px;
+  }
+  .sky-landing .sl-final-spark {
+    left: 15px;
+    top: 64px;
+    transform: rotate(-13deg);
+  }
+  .sky-landing .sl-final-spark > svg {
+    width: 24px;
+    height: 24px;
+  }
+  .sky-landing .sl-final-cloud {
+    right: -240px;
+    top: 25px;
+    width: 500px;
+    height: 350px;
+  }
+  .sky-landing .sl-footer {
+    padding: 37px 18px 12px;
+    gap: 23px;
+  }
+  .sky-landing .sl-footer > div {
+    width: 100%;
+  }
+  .sky-landing .sl-footer .sl-brand {
+    font-size: 24px;
+  }
+  .sky-landing .sl-footer > div > p {
+    font-size: 12px;
+    line-height: 1.8;
+  }
+  .sky-landing .sl-footer > nav {
+    gap: 23px;
+    flex-wrap: wrap;
+    font-size: 11px;
+  }
+  .sky-landing .sl-footer-bottom {
+    flex-wrap: wrap;
+    font-size: 9px;
+    gap: 9px 20px;
+    padding-top: 18px;
+    margin-top: 7px;
+  }
+  .sky-landing .sl-footer-bottom > a {
+    margin-left: auto;
+    min-height: 44px;
+  }
+  .sky-landing .sl-access-dialog {
+    border-radius: 23px;
+    padding: 33px 26px 26px;
+  }
+  .sky-landing .sl-dialog-close {
+    top: 12px;
+    right: 12px;
+  }
+  .sky-landing .sl-access-icon {
+    width: 55px;
+    height: 55px;
+    border-radius: 16px;
+    margin-bottom: 23px;
+  }
+  .sky-landing .sl-access-dialog h2 {
+    font-size: 29px;
+    letter-spacing: -0.9px;
+  }
+  .sky-landing .sl-access-description {
+    font-size: 12px;
+    line-height: 1.95;
+  }
+  .sky-landing .sl-access-dialog label {
+    font-size: 12px;
+  }
+  .sky-landing .sl-access-submit {
+    font-size: 12px;
+    min-height: 48px;
+  }
+  .sky-landing .sl-access-note {
+    font-size: 10px;
+  }
+  .sky-landing .sl-access-dialog .sl-eyebrow {
+    font-size: 9px;
+  }
+}
+@media (max-width: 370px) {
+  .sky-landing {
+    padding: 8px;
+  }
+  .sky-landing .sl-header {
+    width: calc(100% - 20px);
+    padding-left: 12px;
+    gap: 9px;
+    top: 14px;
+  }
+  .sky-landing .sl-brand {
+    font-size: 20px;
+    letter-spacing: -0.8px;
+    gap: 6px;
+  }
+  .sky-landing .sl-brand > svg {
+    width: 25px;
+    height: 25px;
+  }
+  .sky-landing .sl-header-actions {
+    gap: 5px;
+  }
+  .sky-landing .sl-sign-in {
+    min-height: 44px;
+    padding-inline: 12px;
+    font-size: 11px;
+    gap: 8px;
+  }
+  .sky-landing .sl-icon-button {
+    width: 39px;
+    height: 44px;
+  }
+  .sky-landing .sl-hero {
+    padding: 131px 16px 18px;
+    border-radius: 23px;
+  }
+  .sky-landing .sl-hero h1 {
+    font-size: 35px;
+    letter-spacing: -1.95px;
+    line-height: 1.1;
+  }
+  .sky-landing .sl-hero .sl-eyebrow {
+    font-size: 7px;
+    letter-spacing: 0.85px;
+  }
+  .sky-landing .sl-hero-description {
+    font-size: 12px;
+    line-height: 1.9;
+  }
+  .sky-landing .sl-hero-actions {
+    gap: 9px;
+    max-width: 240px;
+    margin-inline: auto;
+  }
+  .sky-landing .sl-hero-actions .sl-button {
+    width: 100%;
+    justify-content: space-between;
+    font-size: 12px;
+    padding-inline: 19px;
+    min-height: 48px;
+  }
+  .sky-landing .sl-hero-note {
+    font-size: 9px;
+    max-width: 230px;
+  }
+  .sky-landing .sl-hero-bottom {
+    font-size: 9px;
+    gap: 4px 9px;
+    position: relative;
+    padding-right: 44px;
+  }
+  .sky-landing .sl-hero-bottom > span {
+    font-size: 9px;
+    min-height: 25px;
+  }
+  .sky-landing .sl-hero-bottom > a {
+    position: absolute;
+    right: 0;
+    top: 18px;
+    width: 36px;
+    height: 44px;
+  }
+  .sky-landing .sl-section {
+    padding-inline: 14px;
+  }
+  .sky-landing .sl-section h2 {
+    font-size: 30px;
+    letter-spacing: -1.3px;
+  }
+  .sky-landing .sl-section-tag {
+    font-size: 7px;
+    letter-spacing: 0.9px;
+  }
+  .sky-landing .sl-feature-card {
+    padding-inline: 22px;
+  }
+  .sky-landing .sl-feature-art {
+    margin-inline: -22px;
+    height: 235px;
+  }
+  .sky-landing .sl-feature-card h3 {
+    font-size: 26px;
+  }
+  .sky-landing .sl-approval-art > div {
+    width: 218px;
+    padding-inline: 14px;
+    gap: 10px;
+  }
+  .sky-landing .sl-approval-art > div > span {
+    font-size: 10px;
+  }
+  .sky-landing .sl-memory-sheet {
+    width: 177px;
+    height: 159px;
+  }
+  .sky-landing .sl-workflow {
+    padding-inline: 13px;
+  }
+  .sky-landing .sl-workflow h2 {
+    font-size: 27px;
+    letter-spacing: -1px;
+  }
+  .sky-landing .sl-workflow-tabs > button {
+    padding-inline: 10px;
+    gap: 6px;
+    min-height: 54px;
+  }
+  .sky-landing .sl-workflow-tabs > button > span {
+    font-size: 8px;
+  }
+  .sky-landing .sl-workflow-tabs > button > strong {
+    font-size: 11px;
+  }
+  .sky-landing .sl-workflow-tabs > button > svg {
+    width: 15px;
+    height: 15px;
+  }
+  .sky-landing .sl-workflow-copy {
+    padding-inline: 19px;
+  }
+  .sky-landing .sl-workflow-copy > h3 {
+    font-size: 24px;
+  }
+  .sky-landing .sl-workflow-copy > dl {
+    gap: 12px;
+  }
+  .sky-landing .sl-workflow-copy dd {
+    font-size: 10px;
+  }
+  .sky-landing .sl-workflow-art {
+    min-height: 365px;
+  }
+  .sky-landing .sl-workflow-sheet {
+    width: 210px;
+    min-height: 258px;
+    padding: 20px;
+    top: 72px;
+  }
+  .sky-landing .sl-workflow-sheet-back {
+    top: 72px;
+  }
+  .sky-landing .sl-workflow-sheet h4 {
+    font-size: 12px;
+  }
+  .sky-landing .sl-workflow-sheet li {
+    font-size: 9px;
+  }
+  .sky-landing .sl-workflow-sheet p {
+    font-size: 8px;
+  }
+  .sky-landing .sl-workflow-art-label {
+    font-size: 6px;
+    letter-spacing: 0.25px;
+  }
+  .sky-landing .sl-foundation-heading h2,
+  .sky-landing .sl-faq h2 {
+    font-size: 34px;
+  }
+  .sky-landing .sl-foundation-options > button {
+    padding-inline: 14px;
+    gap: 11px;
+  }
+  .sky-landing .sl-foundation-options > button > strong {
+    font-size: 13px;
+  }
+  .sky-landing .sl-foundation-detail {
+    padding-inline: 22px;
+  }
+  .sky-landing .sl-foundation-detail > h3 {
+    font-size: 23px;
+  }
+  .sky-landing .sl-foundation-note {
+    padding: 15px;
+    gap: 10px;
+  }
+  .sky-landing .sl-foundation-note > p {
+    font-size: 10px;
+  }
+  .sky-landing .sl-final-cta h2 {
+    font-size: 38px;
+    letter-spacing: -1.7px;
+  }
+  .sky-landing .sl-final-spark {
+    left: 8px;
+    top: 66px;
+  }
+  .sky-landing .sl-final-spark > svg {
+    width: 21px;
+    height: 21px;
+  }
+  .sky-landing .sl-final-note {
+    font-size: 9px;
+  }
+  .sky-landing .sl-final-cta > .sl-button {
+    font-size: 11px;
+    padding-inline: 17px;
+    gap: 14px;
+  }
+  .sky-landing .sl-footer > nav {
+    gap: 20px;
+    font-size: 10px;
+  }
+  .sky-landing .sl-footer-bottom {
+    font-size: 8px;
+  }
+  .sky-landing .sl-access-dialog {
+    padding-inline: 23px;
+  }
+  .sky-landing .sl-access-dialog h2 {
+    font-size: 27px;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .sky-landing *,
+  .sky-landing *::before,
+  .sky-landing *::after {
+    animation: none !important;
+    transition: none !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+/* Readable functional text and clear selection remain constant across widths. */
+.sky-landing .sl-hero-bottom,
+.sky-landing .sl-workflow-copy dt,
+.sky-landing .sl-workflow-copy dd,
+.sky-landing .sl-foundation-detail > div > span,
+.sky-landing .sl-foundation-note > p,
+.sky-landing .sl-foundation-note > a,
+.sky-landing .sl-final-note,
+.sky-landing .sl-footer-bottom,
+.sky-landing .sl-access-note {
+  font-size: 12px;
+}
+.sky-landing .sl-workflow-tabs > button.is-active {
+  box-shadow:
+    0 0 0 1px #4f8bc1,
+    0 6px 16px #4b83a51a;
+}
+.sky-landing .sl-access-dialog input {
+  border-color: #7891a5;
+}
+@media (max-width: 760px) {
+  .sky-landing .sl-icon-button {
+    width: 44px;
+    height: 44px;
+  }
+  .sky-landing .sl-hero-bottom {
+    font-size: 11px;
+  }
+  .sky-landing .sl-hero-bottom > span {
+    font-size: 11px;
+  }
+  .sky-landing .sl-hero-note {
+    font-size: 12px;
+  }
+  .sky-landing .sl-foundation-detail > div > span {
+    font-size: 11px;
+  }
+  .sky-landing .sl-footer-bottom {
+    font-size: 11px;
+  }
+}
+.sky-landing .sl-workflow-art-label {
+  font-size: 10px;
+}
+@media (max-width: 760px) {
+  .sky-landing .sl-workflow-art {
+    min-height: 420px;
+  }
+}
+
+/* An original evidence workbench makes the product mechanism the hero. */
+.sky-landing .sl-hero {
+  min-height: auto;
+  padding-bottom: 24px;
+}
+.sky-landing .sl-evidence-workbench {
+  max-width: 1120px;
+  margin: 55px auto 0;
+  position: relative;
+  isolation: isolate;
+}
+.sky-landing .sl-workbench-heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 20px;
+  padding-inline: 14px;
+  color: #345a73;
+  font-size: 10px;
+  letter-spacing: 0.8px;
+  font-weight: 700;
+}
+.sky-landing .sl-workbench-heading > span {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  line-height: 1.8;
+}
+.sky-landing .sl-workbench-heading > span:last-child {
+  font-size: 11px;
+  letter-spacing: 0;
+  font-weight: 500;
+  color: #345a73;
+}
+.sky-landing .sl-memory-canvas {
+  position: relative;
+  height: 360px;
+  isolation: isolate;
+}
+.sky-landing .sl-memory-grid {
+  position: absolute;
+  inset: 15px 0 0;
+  background-image: radial-gradient(#528bbd28 1px, transparent 1px);
+  background-size: 18px 18px;
+  mask-image: radial-gradient(ellipse, #000 30%, transparent 73%);
+  z-index: -1;
+}
+.sky-landing .sl-memory-paths {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+}
+.sky-landing .sl-memory-paths > path {
+  stroke-width: 1.5;
+  vector-effect: non-scaling-stroke;
+}
+.sky-landing .sl-memory-paths > .sl-memory-path-pulse {
+  stroke: #eaf9ff;
+  stroke-width: 2;
+  stroke-dasharray: 6 27;
+  animation: sl-memory-flow 16s linear infinite;
+  opacity: 0.8;
+}
+.sky-landing .sl-memory-paths > circle {
+  fill: #e7f6ff;
+  stroke: #6095bf;
+  stroke-width: 1.3;
+}
+.sky-landing .sl-memory-card {
+  position: absolute;
+  left: 12.5%;
+  top: 105px;
+  transform: translateX(-50%) rotate(-5deg);
+  width: 230px;
+  min-height: 210px;
+  padding: 17px 19px 18px;
+  border: 1px solid #e8f5ffd9;
+  border-radius: 18px;
+  background: linear-gradient(150deg, #fff, #f0f8fe);
+  box-shadow:
+    0 6px 0 #a9cee5,
+    0 18px 34px #437da429;
+  display: flex;
+  align-items: flex-start;
+  flex-direction: column;
+  text-align: left;
+  color: #24435a;
+  cursor: pointer;
+  transition:
+    transform 180ms,
+    border-color 180ms,
+    box-shadow 180ms;
+}
+.sky-landing .sl-memory-card-1 {
+  left: 37.5%;
+  top: 28px;
+  transform: translateX(-50%) rotate(3deg);
+  background: linear-gradient(145deg, #eaf6ff, #cee7fa);
+  box-shadow:
+    0 6px 0 #95bfdd,
+    0 18px 34px #437da429;
+}
+.sky-landing .sl-memory-card-2 {
+  left: 62.5%;
+  transform: translateX(-50%) rotate(-3deg);
+}
+.sky-landing .sl-memory-card-3 {
+  left: 87.5%;
+  top: 28px;
+  transform: translateX(-50%) rotate(4deg);
+  background: linear-gradient(145deg, #f3fbff, #d9edfb);
+  box-shadow:
+    0 6px 0 #a3c9e3,
+    0 18px 34px #437da429;
+}
+.sky-landing .sl-memory-card:hover,
+.sky-landing .sl-memory-card.is-active {
+  border-color: #2e6caa;
+  box-shadow:
+    0 0 0 2px #5189bf38,
+    0 6px 0 #8eb8d9,
+    0 18px 38px #356e9d33;
+}
+.sky-landing .sl-memory-card-top {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 9px;
+  font-size: 9px;
+  letter-spacing: 1px;
+  font-weight: 750;
+  color: #345c7a;
+  line-height: 1.4;
+  margin-bottom: 14px;
+}
+.sky-landing .sl-memory-card-top > svg {
+  color: #86a5bd;
+}
+.sky-landing .sl-memory-card-icon {
+  width: 50px;
+  height: 50px;
+  display: grid;
+  place-items: center;
+  border: 1px solid #d2e6f5;
+  border-radius: 14px;
+  background: #e1f1fd;
+  color: #3174b8;
+  box-shadow:
+    inset 0 1px 0 #fff,
+    0 3px 0 #c8e0f0;
+  margin-bottom: 13px;
+}
+.sky-landing .sl-memory-card-1 .sl-memory-card-icon {
+  background: #f6fbff;
+}
+.sky-landing .sl-memory-card > strong {
+  font-size: 16px;
+  line-height: 1.4;
+  letter-spacing: -0.35px;
+  font-weight: 800;
+  margin-bottom: 7px;
+}
+.sky-landing .sl-memory-card-note {
+  font-size: 11px;
+  line-height: 1.7;
+  color: #3c5e79;
+}
+.sky-landing .sl-human-gate-pair {
+  display: flex;
+  gap: 5px;
+  flex-wrap: wrap;
+  margin-top: 11px;
+}
+.sky-landing .sl-human-gate-pair > span {
+  font-size: 9px;
+  border: 1px solid #b5d1e7;
+  border-radius: 6px;
+  padding: 4px 6px;
+  color: #365b77;
+  background: #eff8ffb3;
+  white-space: nowrap;
+}
+.sky-landing .sl-mini-memory-graph {
+  display: block;
+  width: 100%;
+  height: 45px;
+  margin-top: 8px;
+  fill: #eff9ff;
+  stroke: #4784b6;
+  stroke-width: 1.5;
+}
+.sky-landing .sl-mini-memory-graph > path {
+  fill: none;
+  stroke: #94b7d2;
+}
+.sky-landing .sl-memory-explanation {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 25px;
+  background: #edf9ffbf;
+  border: 1px solid #eaf8ffd9;
+  box-shadow:
+    inset 0 1px 0 #fff6,
+    0 8px 22px #4e84a111;
+  border-radius: 17px;
+  padding: 19px 24px;
+  min-height: 119px;
+  backdrop-filter: blur(14px);
+}
+.sky-landing .sl-memory-explanation-label {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: #2c5878;
+  font-size: 12px;
+  font-weight: 750;
+}
+.sky-landing .sl-memory-explanation p {
+  max-width: 680px;
+  color: #365d7a;
+  font-size: 12px;
+  line-height: 1.85;
+  margin-top: 7px;
+}
+.sky-landing .sl-memory-principle {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  padding: 8px 11px;
+  border: 1px solid #bcd7eb;
+  border-radius: 99px;
+  background: #dceffb;
+  color: #345c78;
+  font-size: 11px;
+  font-weight: 650;
+  flex-shrink: 0;
+}
+.sky-landing .sl-workbench-caption {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+  font-size: 11px;
+  line-height: 1.8;
+  color: #345a73;
+  margin-top: 17px;
+}
+.sky-landing .sl-workbench-caption > svg {
+  flex-shrink: 0;
+}
+.sky-landing .sl-hero-bottom {
+  margin-top: 23px;
+}
+@keyframes sl-memory-flow {
+  to {
+    stroke-dashoffset: -528;
+  }
+}
+@media (max-width: 1100px) {
+  .sky-landing .sl-memory-card {
+    width: 205px;
+    padding: 16px 16px 17px;
+  }
+  .sky-landing .sl-memory-card > strong {
+    font-size: 14px;
+  }
+  .sky-landing .sl-memory-card-note {
+    font-size: 10px;
+  }
+  .sky-landing .sl-human-gate-pair > span {
+    font-size: 8px;
+    padding-inline: 5px;
+  }
+  .sky-landing .sl-memory-explanation {
+    padding: 18px 20px;
+    gap: 20px;
+  }
+  .sky-landing .sl-memory-principle {
+    font-size: 10px;
+    padding-inline: 9px;
+  }
+}
+@media (max-width: 900px) {
+  .sky-landing .sl-evidence-workbench {
+    max-width: 660px;
+  }
+  .sky-landing .sl-memory-canvas {
+    height: auto;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 23px 27px;
+    padding: 29px 13px 32px;
+  }
+  .sky-landing .sl-memory-card {
+    position: relative;
+    left: auto;
+    top: auto;
+    width: auto;
+    min-height: 220px;
+    transform: rotate(-3deg);
+  }
+  .sky-landing .sl-memory-card-1 {
+    transform: rotate(3deg);
+  }
+  .sky-landing .sl-memory-card-2 {
+    transform: rotate(2deg);
+  }
+  .sky-landing .sl-memory-card-3 {
+    transform: rotate(-2deg);
+  }
+  .sky-landing .sl-memory-paths {
+    display: none;
+  }
+  .sky-landing .sl-memory-card > strong {
+    font-size: 16px;
+  }
+  .sky-landing .sl-memory-card-note {
+    font-size: 12px;
+  }
+  .sky-landing .sl-human-gate-pair > span {
+    font-size: 10px;
+  }
+  .sky-landing .sl-workbench-heading > span:last-child {
+    display: none;
+  }
+  .sky-landing .sl-memory-explanation {
+    display: block;
+  }
+  .sky-landing .sl-memory-principle {
+    display: inline-flex;
+    margin-top: 13px;
+    font-size: 11px;
+  }
+  .sky-landing .sl-workbench-caption {
+    font-size: 11px;
+    align-items: flex-start;
+    padding-inline: 4px;
+  }
+  .sky-landing .sl-workbench-caption > svg {
+    margin-top: 3px;
+  }
+}
+@media (max-width: 760px) {
+  .sky-landing .sl-evidence-workbench {
+    margin-top: 39px;
+  }
+  .sky-landing .sl-workbench-heading {
+    font-size: 8px;
+    letter-spacing: 0.65px;
+    padding-inline: 3px;
+    line-height: 1.8;
+  }
+  .sky-landing .sl-workbench-heading > span {
+    gap: 6px;
+  }
+  .sky-landing .sl-workbench-heading svg {
+    width: 12px;
+    height: 12px;
+  }
+  .sky-landing .sl-memory-canvas {
+    gap: 19px 16px;
+    padding: 25px 5px 29px;
+  }
+  .sky-landing .sl-memory-card {
+    min-height: 203px;
+    padding: 13px 12px 14px;
+    border-radius: 14px;
+    box-shadow:
+      0 5px 0 #a9cee5,
+      0 12px 24px #437da422;
+  }
+  .sky-landing .sl-memory-card-top {
+    font-size: 7px;
+    letter-spacing: 0.6px;
+    margin-bottom: 12px;
+  }
+  .sky-landing .sl-memory-card-top > svg {
+    width: 11px;
+    height: 11px;
+  }
+  .sky-landing .sl-memory-card-icon {
+    width: 41px;
+    height: 41px;
+    border-radius: 12px;
+    margin-bottom: 12px;
+  }
+  .sky-landing .sl-memory-card-icon > svg {
+    width: 24px;
+    height: 24px;
+  }
+  .sky-landing .sl-memory-card > strong {
+    font-size: 13px;
+    letter-spacing: -0.3px;
+    line-height: 1.5;
+    margin-bottom: 6px;
+  }
+  .sky-landing .sl-memory-card-note {
+    font-size: 10px;
+    line-height: 1.75;
+  }
+  .sky-landing .sl-human-gate-pair {
+    margin-top: 9px;
+    gap: 4px;
+  }
+  .sky-landing .sl-human-gate-pair > span {
+    font-size: 8px;
+    border-radius: 5px;
+    padding: 3px 4px;
+  }
+  .sky-landing .sl-mini-memory-graph {
+    height: 34px;
+    margin-top: 6px;
+  }
+  .sky-landing .sl-memory-explanation {
+    padding: 17px 17px 16px;
+    border-radius: 14px;
+    min-height: 214px;
+  }
+  .sky-landing .sl-memory-explanation-label {
+    font-size: 12px;
+    gap: 7px;
+  }
+  .sky-landing .sl-memory-explanation p {
+    font-size: 12px;
+    line-height: 1.85;
+    margin-top: 8px;
+  }
+  .sky-landing .sl-memory-principle {
+    font-size: 10px;
+    line-height: 1.6;
+    padding: 7px 9px;
+    margin-top: 12px;
+    gap: 6px;
+  }
+  .sky-landing .sl-workbench-caption {
+    font-size: 10px;
+    gap: 6px;
+    text-align: left;
+    margin-top: 15px;
+  }
+  .sky-landing .sl-hero-bottom {
+    margin-top: 21px;
+  }
+}
+@media (max-width: 370px) {
+  .sky-landing .sl-memory-canvas {
+    gap: 18px 12px;
+    padding-inline: 3px;
+  }
+  .sky-landing .sl-memory-card {
+    padding: 12px 10px 13px;
+    min-height: 214px;
+  }
+  .sky-landing .sl-memory-card > strong {
+    font-size: 12px;
+    letter-spacing: -0.2px;
+  }
+  .sky-landing .sl-memory-card-top {
+    font-size: 6px;
+    letter-spacing: 0.45px;
+  }
+  .sky-landing .sl-memory-card-note {
+    font-size: 10px;
+    line-height: 1.7;
+  }
+  .sky-landing .sl-human-gate-pair > span {
+    font-size: 7px;
+    padding: 3px 4px;
+  }
+  .sky-landing .sl-workbench-heading {
+    font-size: 7px;
+    letter-spacing: 0.35px;
+  }
+  .sky-landing .sl-memory-explanation {
+    padding: 16px 15px;
+    min-height: 240px;
+  }
+  .sky-landing .sl-memory-principle {
+    font-size: 9px;
+  }
+  .sky-landing .sl-workbench-caption {
+    font-size: 10px;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .sky-landing .sl-memory-path-pulse {
+    animation: none !important;
+  }
+}
+.sky-landing .sl-approval-art > div > span,
+.sky-landing .sl-memory-sheet-front > span,
+.sky-landing .sl-paper-front > span,
+.sky-landing .sl-paper-front > b,
+.sky-landing .sl-workflow-sheet li,
+.sky-landing .sl-workflow-sheet p,
+.sky-landing .sl-feature-index {
+  font-size: 11px;
+}
+@media (max-width: 760px) {
+  .sky-landing .sl-memory-card-note {
+    font-size: 11px;
+  }
+  .sky-landing .sl-human-gate-pair > span {
+    font-size: 10px;
+  }
+  .sky-landing .sl-memory-card {
+    min-height: 235px;
+  }
+}

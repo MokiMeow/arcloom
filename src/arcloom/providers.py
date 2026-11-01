@@ -7,10 +7,8 @@ provider can bootstrap a credential; keys are never classified by their prefix.
 
 import json
 import os
-import tempfile
 import threading
 import time
-from pathlib import Path
 from typing import Literal
 
 from pydantic import Field, SecretStr, ValidationError, field_validator
@@ -21,6 +19,7 @@ from arcloom.clef import ClefPlanner
 from arcloom.cloudflare_auth import CloudflareAuthError, credentials
 from arcloom.config import Settings
 from arcloom.domain import Actor, Candidate, DomainError, Role, StrictModel
+from arcloom.private_storage import PrivateStorage
 from arcloom.storage import Store, canonical, new_id, row_or_error
 
 ProviderID = Literal["deterministic", "openai", "anthropic", "gemini", "cloudflare", "chatgpt"]
@@ -58,12 +57,14 @@ class ProviderManager:
         self.settings, self.store, self.chatgpt = settings, store, chatgpt
         self.planner_factory = planner_factory
         self.path = settings.data_dir / "private" / "providers.json"
+        self._private = PrivateStorage(settings)
         self._lock = threading.RLock()
 
     def _load(self) -> dict:
         if self.path.exists():
             try:
-                state = json.loads(self.path.read_text(encoding="utf-8"))
+                data, legacy = self._private.read(self.path, "provider-profiles")
+                state = json.loads(data)
                 if (
                     state.get("version") != 1
                     or state.get("active_provider") not in LABELS
@@ -73,6 +74,8 @@ class ProviderManager:
                 for provider, profile in state["profiles"].items():
                     if provider not in LABELS or not isinstance(profile, dict):
                         raise ValueError("Invalid local provider profile")
+                if legacy:
+                    self._save(state)
                 return state
             except (OSError, ValueError, TypeError) as exc:
                 raise DomainError(
@@ -113,26 +116,11 @@ class ProviderManager:
         return profile.get("account_id", "")
 
     def _save(self, state: dict):
-        self.path.parent.mkdir(parents=True, exist_ok=True, mode=0o700)
-        temporary = None
-        try:
-            fd, temporary = tempfile.mkstemp(prefix=".providers-", dir=self.path.parent)
-            os.chmod(temporary, 0o600)
-            with os.fdopen(fd, "w", encoding="utf-8") as stream:
-                stream.write(canonical(state))
-                stream.flush()
-                os.fsync(stream.fileno())
-            os.replace(temporary, self.path)
-            os.chmod(self.path, 0o600)
-        except OSError as exc:
-            raise DomainError(
-                "provider_configuration",
-                "The private provider configuration could not be saved",
-                503,
-            ) from exc
-        finally:
-            if temporary and Path(temporary).exists():
-                Path(temporary).unlink()
+        self._private.write(self.path, "provider-profiles", canonical(state).encode())
+
+    def _require_workspace(self, actor: Actor) -> None:
+        if actor.tenant != self.settings.tenant:
+            raise DomainError("forbidden", "This provider belongs to another workspace", 403)
 
     def _settings(self, state: dict) -> Settings:
         provider = state["active_provider"]
@@ -217,10 +205,11 @@ class ProviderManager:
             }
 
     def configure(self, actor: Actor, **values) -> dict:
+        self._require_workspace(actor)
         require(actor, Role.ADMIN)
         value = ProviderInput.model_validate(values)
         owner = new_id("provider_config")
-        lease = "provider_config"
+        lease = "provider_config_" + actor.tenant
         if not self.store.acquire_lock(lease, owner, 10):
             raise DomainError(
                 "provider_busy", "Another provider configuration update is running", 409
@@ -333,10 +322,12 @@ class ProviderManager:
         return settings, self._planner(settings)
 
     def audit(self, actor: Actor, kind: str, payload: dict, object_id="provider"):
+        self._require_workspace(actor)
         with self.store.transaction() as conn:
             self.store.event(conn, actor.tenant, kind, actor.id, object_id, payload)
 
     def test(self, actor: Actor) -> dict:
+        self._require_workspace(actor)
         require(actor, Role.ADMIN)
         self.store.limit("provider_test_" + actor.tenant, 10, 60)
         owner, lease = new_id("diagnostic"), "provider_test_" + actor.tenant

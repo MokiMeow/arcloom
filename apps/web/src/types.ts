@@ -4,6 +4,9 @@ export interface Actor {
   id: string;
   tenant: string;
   role: Role;
+  name?: string;
+  email?: string | null;
+  password_account?: boolean;
 }
 export interface Session {
   actor: Actor;
@@ -142,7 +145,13 @@ export interface Case {
   reports?: { id: string; researcher: string; description: string }[];
   runs?: Run[];
   finding?: Finding | null;
-  reviews?: { id: string; reason: string; decision: string; actor: string }[];
+  reviews?: {
+    id: string;
+    run_id?: string;
+    reason: string;
+    decision: string;
+    actor: string;
+  }[];
   approvals?: { id: string; reason: string; decision: string; actor: string }[];
 }
 export interface CasePage {

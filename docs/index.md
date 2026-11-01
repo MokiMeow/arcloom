@@ -4,7 +4,7 @@ Arcloom turns reviewed synthetic security evidence into persistent investigation
 
 ## Try the workflow
 
-- [Public UI demo](ui-demo.md): an interactive recorded tour and the distinction from full hosted execution.
+- [Archived UI tour](ui-demo.md): an explicit recorded development option, separate from individual accounts and hosted execution.
 - [Project origin](project-story.md): the human-defined idea and the decisions that shaped the product.
 
 - [Demo walkthrough](demo.md): confirm the gateway, investigate the invoice weakness, verify a chain and revalidate after a patch.
@@ -22,6 +22,7 @@ Arcloom turns reviewed synthetic security evidence into persistent investigation
 
 ## Operate and verify
 
+- [Accounts and recovery](authentication.md): individual identities, private workspaces, passwords and protected credentials.
 - [Operations](operations.md): persistence, diagnosis, backup and application hosting.
 - [FalkorDB Server and Cloud](cloud-hosting.md): connect a graph and stage a verified migration.
 - [Cloudflare decision adapter](cloudflare-clef.md): choice receipts, abstention and configuration.

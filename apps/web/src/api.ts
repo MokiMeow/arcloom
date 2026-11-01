@@ -1,7 +1,9 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 
 let csrf: string | null = null;
+let authenticationVersion = 0;
 export function setCsrf(value: string | null): void {
+  if (csrf !== value) authenticationVersion += 1;
   csrf = value;
 }
 export class ApiError extends Error {
@@ -36,6 +38,7 @@ export async function request<T>(
     headers["Idempotency-Key"] = crypto.randomUUID();
     if (csrf) headers["X-CSRF-Token"] = csrf;
   }
+  const requestAuthenticationVersion = authenticationVersion;
   const response = await fetch(path, {
     method,
     headers,
@@ -43,15 +46,6 @@ export async function request<T>(
     body: body === undefined ? undefined : JSON.stringify(body),
     signal,
   });
-  if (
-    response.status === 401 &&
-    !signal?.aborted &&
-    path !== "/api/auth/session" &&
-    path !== "/api/auth/login" &&
-    typeof window !== "undefined"
-  ) {
-    window.dispatchEvent(new Event("arcloom:session-expired"));
-  }
   if (response.status === 204) return undefined as T;
   let data;
   try {
@@ -67,6 +61,25 @@ export async function request<T>(
     }
   }
   if (!response.ok) {
+    const publicAuthentication = [
+      "/api/auth/session",
+      "/api/auth/login",
+      "/api/auth/register",
+      "/api/auth/recover",
+    ].includes(path);
+    const invalidPasswordProof =
+      path === "/api/auth/password" &&
+      ["invalid_credentials", "invalid_password"].includes(data?.error?.code);
+    if (
+      response.status === 401 &&
+      !signal?.aborted &&
+      requestAuthenticationVersion === authenticationVersion &&
+      !publicAuthentication &&
+      !invalidPasswordProof &&
+      typeof window !== "undefined"
+    ) {
+      window.dispatchEvent(new Event("arcloom:session-expired"));
+    }
     throw new ApiError(
       data?.error?.message ?? `Request failed (${response.status})`,
       response.status,

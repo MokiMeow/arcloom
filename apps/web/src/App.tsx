@@ -1,18 +1,18 @@
-import { lazy, Suspense, useEffect, useRef, useState } from "react";
+import { Fragment, lazy, Suspense, useEffect, useRef, useState } from "react";
 import {
   Activity as ActivityIcon,
-  ArrowRight,
+  ArrowUpRight,
   Database,
-  Fingerprint,
   GitBranch,
   LayoutDashboard,
-  LoaderCircle,
   LogOut,
   Menu,
+  PanelLeftClose,
+  Search,
+  Bell,
   Plus,
   Settings2,
   ShieldCheck,
-  Sparkles,
   X,
 } from "lucide-react";
 import { ApiError, errorText, request, setCsrf, useRemote } from "./api";
@@ -28,6 +28,8 @@ import { BrandMark } from "./components/Brand";
 import { readLocation, locationFor, type View } from "./navigation";
 import { useWorkspaceAgentTools } from "./webmcp";
 import { PUBLIC_DEMO, demoScenario } from "./demoMode";
+import { Landing } from "./components/Landing";
+import { CommandPalette } from "./components/CommandPalette";
 
 const Memory = lazy(() =>
   import("./components/Memory").then((module) => ({ default: module.Memory })),
@@ -41,125 +43,14 @@ const navigation = [
   { id: "settings", label: "Workspace policy", icon: Settings2 },
 ] as const;
 
-function Login({ authenticated }: { authenticated: (s: Session) => void }) {
-  const [token, setToken] = useState("");
-  const [error, setError] = useState<string | null>(null);
-  const [busy, setBusy] = useState(false);
-  async function submit(e: React.FormEvent) {
-    e.preventDefault();
-    setBusy(true);
-    setError(null);
-    try {
-      const result = await request<Session>("/api/auth/login", "POST", {
-        token,
-      });
-      setToken("");
-      authenticated(result);
-    } catch (err) {
-      setError(errorText(err));
-    } finally {
-      setBusy(false);
-    }
-  }
-  return (
-    <main className="login-screen">
-      <section className="login-story">
-        <div className="brand large">
-          <span className="brand-symbol">
-            <BrandMark />
-          </span>
-          arcloom
-          <span className="brand-period">.</span>
-        </div>
-        <div>
-          <p className="eyebrow">A workspace for connected investigations</p>
-          <h1>
-            Every investigation
-            <br />
-            leaves a thread.
-            <br />
-            <em>Follow it further.</em>
-          </h1>
-          <p className="lead">
-            Connected findings. Verifiable evidence.
-            <br />A better starting point for the next agent.
-          </p>
-        </div>
-        <div className="login-path">
-          <span>
-            <Fingerprint size={19} />
-            Finding
-          </span>
-          <ArrowRight size={16} />
-          <span>
-            <Database size={19} />
-            Memory
-          </span>
-          <ArrowRight size={16} />
-          <span>
-            <Sparkles size={19} />
-            Discovery
-          </span>
-        </div>
-        <div className="login-principle">
-          <span className="mono">01 / EVIDENCE FIRST</span>
-          <p>
-            One reviewed finding becomes the next investigator’s starting point.
-          </p>
-        </div>
-        <p className="footnote">
-          Built around FalkorDB. Restricted to a controlled synthetic lab.
-        </p>
-      </section>
-      <section className="login-panel">
-        <form onSubmit={submit}>
-          <span className="login-lock">
-            <ShieldCheck size={25} />
-          </span>
-          <p className="eyebrow">Your investigation workspace</p>
-          <h2>Welcome to Arcloom.</h2>
-          <p className="body-copy">
-            Use the access token generated during setup or shared by your
-            workspace owner.
-          </p>
-          <label>
-            Workspace access token
-            <input
-              aria-label="Workspace access token"
-              type="password"
-              autoComplete="one-time-code"
-              required
-              minLength={32}
-              maxLength={256}
-              value={token}
-              onChange={(e) => setToken(e.target.value)}
-              placeholder="Enter your private access token"
-            />
-          </label>
-          <ErrorNotice message={error} />
-          <button className="button primary login-submit" disabled={busy}>
-            {busy ? (
-              <LoaderCircle className="spin" size={16} />
-            ) : (
-              <ArrowRight size={16} />
-            )}
-            Enter workspace
-          </button>
-          <p className="footnote">
-            Private by default. Your access token stays out of browser storage.
-          </p>
-        </form>
-      </section>
-    </main>
-  );
-}
-
 function Workspace({
   session,
   signOut,
+  onSessionUpdated,
 }: {
   session: Session;
   signOut: () => void;
+  onSessionUpdated: (session: Session) => void;
 }) {
   const [route, setRoute] = useState(() => readLocation());
   const { view, caseId } = route;
@@ -168,6 +59,8 @@ function Workspace({
     version: 0,
   });
   const [menuOpen, setMenuOpen] = useState(false);
+  const [compact, setCompact] = useState(false);
+  const [commandOpen, setCommandOpen] = useState(false);
   const [revision, setRevision] = useState(0);
   const [showReport, setShowReport] = useState(false);
   const [busy, setBusy] = useState(false);
@@ -250,6 +143,16 @@ function Workspace({
       document.getElementById("navigation-toggle")?.focus();
     };
   }, [menuOpen]);
+  useEffect(() => {
+    const shortcut = (event: KeyboardEvent) => {
+      if ((event.metaKey || event.ctrlKey) && event.key.toLowerCase() === "k") {
+        event.preventDefault();
+        if (!showReport && !menuOpen) setCommandOpen((open) => !open);
+      }
+    };
+    window.addEventListener("keydown", shortcut);
+    return () => window.removeEventListener("keydown", shortcut);
+  }, [showReport, menuOpen]);
   function openCase(id: string) {
     navigate("investigations", id);
   }
@@ -286,7 +189,7 @@ function Workspace({
     (d.data?.counts.awaiting_review ?? 0);
   return (
     <div
-      className={`app-shell ${menuOpen ? "navigation-open" : ""} ${PUBLIC_DEMO ? "public-demo" : ""}`}
+      className={`app-shell ${compact ? "compact-sidebar" : ""} ${menuOpen ? "navigation-open" : ""} ${PUBLIC_DEMO ? "public-demo" : ""}`}
     >
       <a
         href="#main-content"
@@ -334,8 +237,14 @@ function Workspace({
           <span className="brand-symbol">
             <BrandMark />
           </span>
-          arcloom
-          <span className="brand-period">.</span>
+          <span className="brand-name">Arcloom</span>
+        </button>
+        <button
+          className="sidebar-collapse icon-button"
+          aria-label={compact ? "Expand sidebar" : "Collapse sidebar"}
+          onClick={() => setCompact((value) => !value)}
+        >
+          <PanelLeftClose size={17} />
         </button>
         <div className="workspace-chip">
           <span className="workspace-initial">
@@ -343,38 +252,48 @@ function Workspace({
           </span>
           <div>
             <strong title={session.actor.tenant}>{session.actor.tenant}</strong>
-            <small>Security workspace</small>
+            <small>Investigation workspace</small>
           </div>
           <span className="badge">{PUBLIC_DEMO ? "DEMO" : "LAB"}</span>
         </div>
         <p className="nav-caption">Workspace</p>
         <nav aria-label="Main navigation">
           {navigation.map((n) => (
-            <button
-              key={n.id}
-              className={`nav-item ${view === n.id ? "active" : ""}`}
-              aria-current={view === n.id ? "page" : undefined}
-              aria-label={n.label}
-              title={n.label}
-              onClick={() => {
-                navigate(n.id);
-              }}
-            >
-              <n.icon size={17} />
-              <span>{n.label}</span>
-              {n.id === "investigations" && reviewCount > 0 && (
-                <span className="nav-count">{reviewCount}</span>
+            <Fragment key={n.id}>
+              {n.id === "memory" && (
+                <p className="nav-caption nav-section-caption">Knowledge</p>
               )}
-            </button>
+              {n.id === "settings" && (
+                <p className="nav-caption nav-section-caption">
+                  Administration
+                </p>
+              )}
+              <button
+                className={`nav-item ${view === n.id ? "active" : ""}`}
+                aria-current={view === n.id ? "page" : undefined}
+                aria-label={n.label}
+                title={n.label}
+                onClick={() => {
+                  navigate(n.id);
+                }}
+              >
+                <n.icon size={17} />
+                <span>{n.label}</span>
+                {n.id === "investigations" && reviewCount > 0 && (
+                  <span className="nav-count">{reviewCount}</span>
+                )}
+              </button>
+            </Fragment>
           ))}
         </nav>
         <div className="sidebar-note">
-          <ShieldCheck size={18} />
-          <strong>Follow the evidence.</strong>
-          <p>
-            An agent may propose. It cannot authorize a test or confirm its own
-            finding.
-          </p>
+          <span className="sidebar-note-label">
+            <ShieldCheck size={15} /> People make the call.
+          </span>
+          <p>Review the test. Inspect the evidence. Keep the context.</p>
+          <button onClick={() => navigate("investigations")}>
+            Review investigations <ArrowUpRight size={14} />
+          </button>
         </div>
         <div className="sidebar-bottom">
           <div className="memory-status">
@@ -406,10 +325,10 @@ function Workspace({
             onClick={() => void logout()}
           >
             <span className="avatar">
-              {session.actor.role[0].toUpperCase()}
+              {(session.actor.name || session.actor.role)[0].toUpperCase()}
             </span>
             <span>
-              {session.actor.role}
+              {session.actor.name || session.actor.role}
               <small>{PUBLIC_DEMO ? "Public demo" : "Private session"}</small>
             </span>
             {!PUBLIC_DEMO && <LogOut size={16} />}
@@ -485,12 +404,31 @@ function Workspace({
             </strong>
           </div>
           <div className="topbar-actions">
+            <button
+              className="workspace-search"
+              aria-label="Open command menu"
+              onClick={() => setCommandOpen(true)}
+            >
+              <Search size={15} />
+              <span>Quick navigation</span>
+              <kbd>⌘ K</kbd>
+            </button>
+            <button
+              className="icon-button decision-notification"
+              aria-label={`Open decision queue, ${reviewCount} pending decisions`}
+              onClick={() => navigate("investigations")}
+            >
+              <Bell size={17} />
+              {reviewCount > 0 && <span>{reviewCount}</span>}
+            </button>
             <span className="badge scope-badge">
               <ShieldCheck size={12} />
               {PUBLIC_DEMO
                 ? "Demo snapshot"
                 : d.data?.scope_enabled
-                  ? "Authorized lab"
+                  ? d.data.scope_expires_at <= d.data.at
+                    ? "Assessment expired"
+                    : "Authorized lab"
                   : "Admission paused"}
             </span>
             <span className="revision-pill">{d.data?.revision ?? "…"}</span>
@@ -528,6 +466,7 @@ function Workspace({
               {view === "overview" && (
                 <Overview
                   dashboard={d.data}
+                  layoutOwner={`${session.actor.tenant}:${session.actor.id}`}
                   revision={revision}
                   browserToolsAvailable={browserToolsAvailable}
                   openCase={openCase}
@@ -577,6 +516,8 @@ function Workspace({
                   revision={revision}
                   changed={changed}
                   role={session.actor.role}
+                  session={session}
+                  onSessionUpdated={onSessionUpdated}
                 />
               )}
             </>
@@ -587,6 +528,14 @@ function Workspace({
           <span>Hypothesis ≠ finding. Historical ≠ current.</span>
         </footer>
       </div>
+      {commandOpen && (
+        <CommandPalette
+          onNavigate={(next) => navigate(next)}
+          onNewReport={() => setShowReport(true)}
+          canWrite={canWrite && Boolean(catalog.data)}
+          onClose={() => setCommandOpen(false)}
+        />
+      )}
       {showReport && catalog.data && (
         <ReportForm
           catalog={catalog.data}
@@ -609,12 +558,13 @@ export default function App() {
   function authenticate(s: Session) {
     setCsrf(s.csrf);
     setSession(s);
+    setError(null);
   }
   useEffect(() => {
     const expire = () => {
       setCsrf(null);
       setSession(null);
-      setError("Your session expired. Enter your workspace token to continue.");
+      setError("Your session expired. Sign in to continue.");
     };
     window.addEventListener("arcloom:session-expired", expire);
     return () => window.removeEventListener("arcloom:session-expired", expire);
@@ -637,15 +587,13 @@ export default function App() {
   return session ? (
     <Workspace
       session={session}
+      onSessionUpdated={authenticate}
       signOut={() => {
         setCsrf(null);
         setSession(null);
       }}
     />
   ) : (
-    <>
-      <ErrorNotice message={error} />
-      <Login authenticated={authenticate} />
-    </>
+    <Landing authenticated={authenticate} statusMessage={error} />
   );
 }

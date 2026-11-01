@@ -4,9 +4,9 @@
 
 Arcloom gives a fresh investigator a verified starting point. A researcher submits a report, a reviewer approves a bounded synthetic test, and accepted evidence becomes persistent FalkorDB memory. The next investigator follows the graph to a related test - with supporting findings, deployment revision and researcher attribution intact.
 
-[Explore the UI demo](https://arcloomdemo.vercel.app) · [Watch the video](https://youtu.be/Z8RMloVLsig) · [Engineering story](docs/blog/README.md) · [Quickstart](#run-locally) · [Documentation](docs/index.md)
+[Accounts and recovery](docs/authentication.md) · [Watch the video](https://youtu.be/Z8RMloVLsig) · [Engineering story](docs/blog/README.md) · [Quickstart](#run-locally) · [Documentation](docs/index.md)
 
-The **[public UI demo](https://arcloomdemo.vercel.app)** lets visitors explore two recorded synthetic states, `r1` and patched `r2`, without logging in. It is clearly labelled and read-only. The [full local application](#run-locally) runs new approved investigations, reviews and optional model calls. [Demo and hosting details](docs/ui-demo.md).
+The application uses individual email/password accounts and private workspaces backed by the real API, persistent journal and FalkorDB. New accounts start empty. [Run the full application](#run-locally) for approved investigations and reviewed evidence. The [archived recorded tour](docs/ui-demo.md) remains an explicit development option; it is not the default application build or an account-hosting service.
 
 ## Watch the investigation continue
 
@@ -109,7 +109,7 @@ uv run --frozen arcloom lab
 uv run --frozen arcloom serve
 ```
 
-Open [the workspace](http://127.0.0.1:8000), sign in with `ARCLOOM_ADMIN_TOKEN` from your local `.env`, and run `uv run --frozen arcloom doctor`. The UI/API uses port 8000; the authenticated lab uses port 9001. Keep graph, lab and API available. State persists under ignored `data/`.
+Open [the workspace](http://127.0.0.1:8000), create an email/password account for a new private workspace, or choose **Advanced workspace token access** with `ARCLOOM_ADMIN_TOKEN` for the existing operator workspace, and run `uv run --frozen arcloom doctor`. The UI/API uses port 8000; the authenticated lab uses port 9001. Keep graph, lab and API available. State persists under ignored `data/`. Save the one-time recovery code when creating an account; see [accounts and recovery](docs/authentication.md).
 
 ### Docker Compose
 

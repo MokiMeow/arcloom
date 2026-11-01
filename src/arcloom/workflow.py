@@ -189,9 +189,12 @@ class Cases:
             where += " AND state=?"
             params.append(state)
         if search:
-            where += " AND (title LIKE ? ESCAPE '\\' OR id LIKE ? ESCAPE '\\')"
+            where += (
+                " AND (title LIKE ? ESCAPE '\\' OR id LIKE ? ESCAPE '\\'"
+                " OR asset_id LIKE ? ESCAPE '\\' OR test_id LIKE ? ESCAPE '\\')"
+            )
             escaped = search.replace("\\", "\\\\").replace("%", "\\%").replace("_", "\\_")
-            params += [f"%{escaped}%"] * 2
+            params += [f"%{escaped}%"] * 4
         total = self.store.one(f"SELECT count(*) AS n FROM cases WHERE {where}", tuple(params))["n"]
         rows = self.store.all(
             f"SELECT * FROM cases WHERE {where} ORDER BY created_at DESC,id LIMIT ? OFFSET ?",

@@ -4,7 +4,7 @@ import json
 import logging
 import secrets
 import time
-from contextlib import asynccontextmanager
+from contextlib import asynccontextmanager, suppress
 from typing import Annotated
 
 from fastapi import Depends, FastAPI, Header, Query, Request, Response
@@ -23,6 +23,9 @@ from arcloom.domain import (
     DomainError,
     LoginInput,
     MemberInput,
+    PasswordChangeInput,
+    RecoverInput,
+    RegisterInput,
     ReportInput,
     ReviewInput,
     RevisionInput,
@@ -232,26 +235,87 @@ def create_app(settings: Settings | None = None, runtime: Runtime | None = None)
             "provider": service.providers.snapshot().provider,
         }
 
-    @app.post("/api/auth/login")
-    def login(value: LoginInput, request: Request, response: Response, service: Service):
-        ip = request.client.host if request.client else "unknown"
-        service.store.limit("login_" + digest(ip), 12, 60)
-        who, session, csrf = service.auth.login(value.token)
+    def authenticated_response(who, token, csrf, response, service, recovery_code=None):
         response.set_cookie(
             COOKIE,
-            session,
+            token,
             max_age=settings.session_seconds,
             httponly=True,
             secure=settings.cookie_secure,
             samesite="strict",
             path="/api",
         )
-        return {"actor": {"id": who.id, "tenant": who.tenant, "role": who.role}, "csrf": csrf}
+        result = {"actor": service.auth.public_actor(who), "csrf": csrf}
+        if recovery_code is not None:
+            result["recovery_code"] = recovery_code
+        return result
+
+    @app.get("/api/auth/options")
+    def auth_options():
+        return {
+            "signup_enabled": settings.signup_enabled,
+            "password_min_length": 12,
+            "password_max_length": 128,
+            "recovery_method": "one_time_recovery_code",
+        }
+
+    @app.post("/api/auth/register", status_code=201)
+    def register(value: RegisterInput, request: Request, response: Response, service: Service):
+        if not settings.signup_enabled:
+            raise DomainError(
+                "signup_closed", "New account registration is closed on this server", 403
+            )
+        ip = request.client.host if request.client else "unknown"
+        service.store.limit("register_" + digest(ip), 5, 600)
+        who, token, csrf, recovery = service.auth.register(
+            value.name, value.email, value.password.get_secret_value()
+        )
+        # Registration remains durable during graph outages; admission still fails closed.
+        with suppress(DomainError):
+            service.projector.flush()
+            if service.intelligence is not None:
+                service.intelligence.prepare(who.tenant)
+        return authenticated_response(who, token, csrf, response, service, recovery)
+
+    @app.post("/api/auth/login")
+    def login(value: LoginInput, request: Request, response: Response, service: Service):
+        ip = request.client.host if request.client else "unknown"
+        service.store.limit("login_" + digest(ip), 12, 60)
+        if value.token is not None:
+            who, token, csrf = service.auth.login(value.token)
+        else:
+            service.store.limit("login_account_" + digest(value.email.casefold()), 12, 300)
+            who, token, csrf = service.auth.login_password(
+                value.email, value.password.get_secret_value()
+            )
+        return authenticated_response(who, token, csrf, response, service)
+
+    @app.post("/api/auth/recover")
+    def recover(value: RecoverInput, request: Request, response: Response, service: Service):
+        ip = request.client.host if request.client else "unknown"
+        service.store.limit("recover_" + digest(ip), 5, 600)
+        service.store.limit("recover_account_" + digest(value.email.casefold()), 5, 600)
+        who, token, csrf, recovery = service.auth.recover(
+            value.email,
+            value.recovery_code.get_secret_value(),
+            value.new_password.get_secret_value(),
+        )
+        return authenticated_response(who, token, csrf, response, service, recovery)
+
+    @app.post("/api/auth/password")
+    def change_password(
+        value: PasswordChangeInput, response: Response, who: Person, service: Service
+    ):
+        service.store.limit("password_change_" + who.id, 5, 600)
+        renewed, token, csrf = service.auth.change_password(
+            who, value.current_password.get_secret_value(), value.new_password.get_secret_value()
+        )
+        return authenticated_response(renewed, token, csrf, response, service)
 
     @app.get("/api/auth/session")
     def session(who: Person, service: Service):
         return {
-            "actor": {"id": who.id, "tenant": who.tenant, "role": who.role},
+            "actor": service.auth.public_actor(who),
             "csrf": service.auth.csrf_for_hash(who.session_hash) if who.session_hash else None,
         }
 
@@ -271,34 +335,36 @@ def create_app(settings: Settings | None = None, runtime: Runtime | None = None)
     @app.get("/api/providers")
     def providers(who: Person, service: Service):
         require(who, Role.ADMIN)
-        return service.providers.status()
+        return service.providers_for(who).status()
 
     @app.get("/api/graph-hosting")
     def graph_hosting(who: Person, service: Service):
         require(who, Role.ADMIN)
-        return hosting_status(service.settings)
+        return hosting_status(service.settings_for(who))
 
     @app.post("/api/graph-hosting/target")
     def stage_graph_target(value: GraphTargetInput, who: Person, service: Service):
         require(who, Role.ADMIN)
-        result = save_target(service.settings, value)
-        service.providers.audit(who, "graph.connection_staged", {"ssl": value.ssl})
+        result = save_target(service.settings_for(who), value)
+        service.providers_for(who).audit(who, "graph.connection_staged", {"ssl": value.ssl})
         return result
 
     @app.post("/api/providers")
     def configure_provider(value: ProviderInput, who: Person, service: Service):
-        return service.providers.configure(who, **value.model_dump())
+        return service.providers_for(who).configure(who, **value.model_dump())
 
     @app.post("/api/providers/test")
     def test_provider(who: Person, service: Service):
-        return service.providers.test(who)
+        return service.providers_for(who).test(who)
 
     @app.post("/api/providers/chatgpt/start")
     def start_chatgpt(value: ChatGPTProfileInput, who: Person, service: Service):
         require(who, Role.ADMIN)
         service.store.limit("chatgpt_start_" + who.tenant, 5, 60)
-        result = service.chatgpt.start(value.profile_id)
-        service.providers.audit(who, "provider.chatgpt_login_started", {"provider": "chatgpt"})
+        result = service.chatgpt_for(who).start(value.profile_id)
+        service.providers_for(who).audit(
+            who, "provider.chatgpt_login_started", {"provider": "chatgpt"}
+        )
         return result
 
     @app.get("/api/providers/chatgpt/models")
@@ -310,16 +376,18 @@ def create_app(settings: Settings | None = None, runtime: Runtime | None = None)
         require(who, Role.ADMIN)
         service.store.limit("chatgpt_models_" + who.tenant, 10, 60)
         return {
-            "items": service.chatgpt.models(
-                profile_id or service.providers.snapshot().chatgpt_profile_id or None
+            "items": service.chatgpt_for(who).models(
+                profile_id or service.providers_for(who).snapshot().chatgpt_profile_id or None
             )
         }
 
     @app.post("/api/providers/chatgpt/disconnect")
     def disconnect_chatgpt(value: ChatGPTProfileInput, who: Person, service: Service):
         require(who, Role.ADMIN)
-        result = service.chatgpt.disconnect(value.profile_id)
-        service.providers.audit(who, "provider.chatgpt_disconnected", {"provider": "chatgpt"})
+        result = service.chatgpt_for(who).disconnect(value.profile_id)
+        service.providers_for(who).audit(
+            who, "provider.chatgpt_disconnected", {"provider": "chatgpt"}
+        )
         return result
 
     @app.get("/api/investigations")
@@ -359,7 +427,7 @@ def create_app(settings: Settings | None = None, runtime: Runtime | None = None)
 
     @app.post("/api/agents/discover")
     def discover(value: DiscoveryInput, key: Key, who: Person, service: Service):
-        return service.discovery.run(who, value, key)
+        return service.discovery_for(who).run(who, value, key)
 
     @app.get("/api/agents")
     def agents(who: Person, service: Service, limit: int = Query(50, ge=1, le=100)):

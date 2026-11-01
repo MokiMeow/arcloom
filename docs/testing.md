@@ -115,6 +115,7 @@ On Linux/Lite:
 
 ```bash
 ARCLOOM_TEST_PYTHON="$PWD/.venv/bin/python" npm --prefix apps/web run e2e
+ARCLOOM_TEST_PYTHON="$PWD/.venv/bin/python" npm --prefix apps/web run e2e:accounts
 ```
 
 On Windows, retain the `ARCLOOM_TEST_GRAPH_*` server values above:
@@ -129,3 +130,66 @@ Keep ports 8000 and 9001 free: the E2E harness owns the API and separate lab pro
 ## Interpret the results
 
 Passing checks establish the exercised paths. They do not establish production load, high availability, external-target safety, model calibration, discovery-rate uplift or exhaustive coverage. Confidence values are model decision signals, not vulnerability probabilities. A complete Docker run and deployment-specific backup/restore exercise need their own recorded verification. Local results do not imply a passing hosted CI run.
+
+## Enterprise interface rebuild
+
+The enterprise interface uses references inspected through the actual Tessory
+catalog, source pages and license notices. See [design references](design-references.md)
+and [component interactions](component-map.md).
+
+The live visual review runs in a separate temporary workspace with actual
+FalkorDBLite, a separate authenticated HTTP lab and the deterministic planner.
+Gateway evidence was produced and accepted through the actual API, an invoice
+investigation was left awaiting evidence review, and an export investigation was
+left awaiting approval. Those are automated test-owner decisions in an isolated
+lab; they do not imply independent human adjudication. The normal user workspace
+and its investigation history were not populated or reset.
+
+The new browser regressions in `apps/web/e2e/enterprise.spec.ts` exercise native
+sign-in focus, product foundations/workflow/FAQ controls without mutation, audit
+window/day inspection and real JSON snapshot downloads, command search,
+sidebar collapse/mobile navigation, actual graph record inspection and filtering
+of loaded audit records. The original investigation/evidence/revision and
+private-token checks remain in `workspace.spec.ts`.
+
+Validation uses system Chromium through a local launch adapter. Responsive
+screenshots and automated WCAG A/AA/2.1 AA checks cover landing, overview, inbox,
+graph, activity, policy and evidence detail at 320, 390, 768, 1024, 1440 and 2560px.
+Screen emulation does not establish physical Android/iOS or Safari/WebKit
+coverage, and automated rules do not establish complete accessibility.
+
+Validated on 29 October 2026 with Python 3.14.8, Node 24.19.0 and system Chromium:
+
+- 192 frontend tests passed across 23 files.
+- All 13 live API/HTTP-lab browser scenarios passed, including the complete
+  evidence/follow-up/revision chain and five enterprise interface checks.
+- Three additional live account/layout scenarios passed in a fresh harness,
+  covering password/session/recovery behavior, actual tenant isolation and
+  pointer/keyboard layout persistence.
+- All five public recorded-view browser scenarios passed. This separate mode was
+  not used for the real-workspace visual previews.
+- Full backend suite: 602 passed, 2 server-only checks skipped under Lite. Total
+  measured coverage was 88%; real FalkorDBLite integration ran. The focused account,
+  tenant-isolation, encryption, legacy migration and account-API regressions passed.
+- Production and recorded-view builds, TypeScript, Ruff, Prettier and diff checks
+  passed.
+- 85 measured page/state/viewport combinations had no detected WCAG A/AA/2.1 AA
+  violations, horizontal document overflow, clipped controls or JavaScript page
+  errors: seven ordinary pages at all six widths, plus account sign-in/signup/
+  reset/recovery, expanded password settings, dashboard customization, signed
+  receipts, audit details, selected graph records and mobile agent contexts.
+- Real Chromium clipboard copying preserved the complete 64-character artifact
+  digest. Receipt/query JSON regions are keyboard-scrollable. Favicon SVG was
+  inspected at 16, 32, 64 and 128px.
+
+The separate `e2e:accounts` command gives account lifecycle/isolation/layout tests
+a fresh disposable API/lab and its own output paths, respecting the unchanged
+production login/recovery limits. It is included in CI after the main browser suite.
+
+Read-only enterprise browser checks reuse a session cookie in worker memory to
+respect the unchanged login rate limit. Authentication, token privacy, role and
+logout scenarios still sign in independently; no session state is saved to disk.
+
+A retry-state regression test verifies that retained receipts/reviews never mark
+an unexecuted new attempt complete. Review completion is tied to the current run's
+`run_id`; previous-attempt evidence remains visible and labelled separately.

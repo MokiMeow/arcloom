@@ -194,7 +194,8 @@ def test_environment_provider_credentials_refresh_without_copying_secret(runtime
     manager.configure(owner, provider="gemini", model="gemini-test", api_key="saved-gemini-key")
     persisted = manager.path.read_text()
     assert "old-environment-key" not in persisted
-    assert json.loads(persisted)["profiles"]["cloudflare"]["credential_source"] == "environment"
+    assert "saved-gemini-key" not in persisted
+    assert manager._load()["profiles"]["cloudflare"]["credential_source"] == "environment"
     refreshed = original.model_copy(
         update={
             "model_api_key": SecretStr("new-environment-key"),

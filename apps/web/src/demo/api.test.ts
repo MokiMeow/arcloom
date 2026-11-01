@@ -68,4 +68,14 @@ describe("public recorded demo", () => {
       code: "demo_not_recorded",
     });
   });
+  it("finds recorded investigations by test ID just like the live inbox", async () => {
+    const result = await demoRequest<CasePage>(
+      "/api/investigations?q=gateway-boundary",
+      "GET",
+      undefined,
+      "r1",
+    );
+    expect(result.total).toBe(1);
+    expect(result.items[0].test_id).toBe("gateway-boundary");
+  });
 });

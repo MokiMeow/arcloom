@@ -2,16 +2,15 @@
 
 import os
 import re
-import tempfile
 import threading
 from io import StringIO
-from pathlib import Path
 from typing import Annotated
 
 from dotenv import dotenv_values
 from pydantic import Field, StringConstraints, field_validator
 
 from arcloom.domain import DomainError, StrictModel
+from arcloom.private_storage import PrivateStorage
 
 _LOCK = threading.RLock()
 
@@ -55,14 +54,18 @@ def _read(settings):
     if not path.exists():
         return None
     try:
-        values = dotenv_values(path, interpolate=False)
-        return GraphTargetInput(
+        content, legacy = PrivateStorage(settings).read(path, "graph-target")
+        values = dotenv_values(stream=StringIO(content.decode("utf-8")), interpolate=False)
+        target = GraphTargetInput(
             host=values["ARCLOOM_GRAPH_HOST"],
             port=values["ARCLOOM_GRAPH_PORT"],
             username=values["ARCLOOM_GRAPH_USERNAME"],
             password=values["ARCLOOM_GRAPH_PASSWORD"],
             ssl=values["ARCLOOM_GRAPH_SSL"],
         )
+        if legacy:
+            PrivateStorage(settings).write(path, "graph-target", content)
+        return target
     except (OSError, ValueError, KeyError, TypeError):
         raise DomainError(
             "graph_configuration", "The staged graph connection could not be read", 503
@@ -79,6 +82,14 @@ def hosting_status(settings):
                 "username": settings.graph_username,
                 "ssl": settings.graph_ssl,
                 "prefix": settings.graph_prefix,
+            }
+            if not settings._shared_graph_infrastructure
+            else {
+                "host": "Managed workspace graph",
+                "port": None,
+                "username": "",
+                "ssl": settings.graph_ssl,
+                "prefix": "",
             },
             "target": {
                 "host": target.host,
@@ -110,7 +121,6 @@ def save_target(settings, value):
             value = value.model_copy(update={"password": old.password})
         path = target_path(settings)
         _safe(path)
-        temporary = None
         try:
             path.parent.mkdir(parents=True, exist_ok=True, mode=0o700)
             if os.name != "nt":
@@ -139,20 +149,9 @@ def save_target(settings, value):
                 raise DomainError(
                     "graph_configuration", "The private connection could not be serialized", 503
                 )
-            descriptor, temporary = tempfile.mkstemp(prefix=".cloud-", dir=path.parent)
-            os.chmod(temporary, 0o600)
-            with os.fdopen(descriptor, "w", encoding="utf-8", newline="\n") as stream:
-                stream.write(content)
-                stream.flush()
-                os.fsync(stream.fileno())
-            _safe(path)
-            os.replace(temporary, path)
-            os.chmod(path, 0o600)
+            PrivateStorage(settings).write(path, "graph-target", content.encode())
         except OSError:
             raise DomainError(
                 "graph_configuration", "The private graph connection could not be saved", 503
             ) from None
-        finally:
-            if temporary:
-                Path(temporary).unlink(missing_ok=True)
         return hosting_status(settings)

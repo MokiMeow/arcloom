@@ -1,3 +1,4 @@
+import { FullIdentifier } from "./FullIdentifier";
 export interface Decision {
   model: string;
   outcome: string;
@@ -54,7 +55,13 @@ export function DecisionReceipt({ decision }: { decision?: Decision | null }) {
           <dd>${decision.estimated_model_cost_usd.toFixed(6)}</dd>
         </div>
       </dl>
-      <p className="break-all muted">Input SHA-256: {decision.input_sha256}</p>
+      <div className="decision-input-digest">
+        <span className="hash-label">Input SHA-256</span>
+        <FullIdentifier
+          value={decision.input_sha256}
+          label="decision input SHA-256"
+        />
+      </div>
       <p className="muted">
         Approval, test observations, and evidence review are separate from this
         decision.

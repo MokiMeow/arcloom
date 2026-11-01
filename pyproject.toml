@@ -19,6 +19,8 @@ dependencies = [
   "FalkorDB==1.8.0",
   "pyjwt[crypto]==2.15.1",
   "mcp==2.3.0",
+  "argon2-cffi==25.1.0",
+  "cryptography==50.0.2",
 ]
 
 [project.optional-dependencies]
